@@ -1,4 +1,8 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.utils.encoding import force_bytes, smart_str, DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 from .models import CustomUser
 
@@ -26,7 +30,6 @@ and other metadata relevant to the serialization process
 * User in the database
 """
 class CustomUserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CustomUser
         fields = ['email', 'password', 'is_paying_user']
@@ -39,14 +42,98 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return user
 
 
+
+
+
 # ***** TOKEN SERIALIZERS *****
 """
 * CustomTokenObtainPairSerializer -> This is a serializer used to include information about the paying status of the user in the JWT to the frontend
 *   This serializer extends the base TokenObtainPairSerializer
 * 
 * FIELDS
-* get_token
+*   @class_method get_token(cls, user) -> This function will get the token for the user and insert their payment status within the JWT itself
+*   validate(self, attrs) -> This function validates whether the user is a registered user in the database
 """
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['is_paying_user'] = user.is_paying_user
+        return token
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        # Add custom fields to the response
+        data['is_paying_user'] = self.user.is_paying_user
+        return data
+    
+
+
+
+
+# ***** PASSWORD RESET SERIALIZERS *****
+"""
+* ResetPasswordRequestSerializer -> This is a serializer that checks the validity of the email that was sent to the password reset request
+*   If the email exists in the database, then the serializer will return true
+* 
+* FIELDS 
+*   validate_email() -> This validates the email by comparing it to the emails in the database
+* 
+* ADDITIONAL
+* DRF looks for validate_<fieldname> methods within a serializer when a .is_valid() function is called. This is when you can look at specific 
+* fields and really check their validity
+"""
+class ResetPasswordRequestSerializer(serializers.Serializer):
+    # These are the fields of the serializer, typically under the meta class
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        # This checks if a user with the specified email exists within the database
+        if not CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No user with this email.")
+        return value
+
+"""
+* SetNewPasswordSerializer -> This is a serializer used to check whether the user has submitted a new password in the requisite amount of time
+*   it then resets the user's password in the actual database. 
+* 
+* FIELDS
+*   validate() -> This validates all of the attributes
+* 
+* ADDITIONAL
+* This is a global validation function that runs after all of the individual field validations have passed. If everything passes, 
+* validated_data is populated.  
+"""
+class SetNewPasswordSerializer(serializers.Serializer):
+    # These are the fields of the serializer, typically under the meta class
+    # They are validated automatically and put into the attrs dictionary which is passed to validate()
+    password = serializers.CharField(write_only=True)
+    token = serializers.CharField()
+    uid64 = serializers.CharField()
+
+    def validate(self, attrs):
+        try:
+            # This decodes the user id of the user from the request
+            uid = smart_str(urlsafe_base64_decode(attrs['uid64']))
+            user = CustomUser.objects.get(id=uid)
+
+            # This checks if the token passed to the serializer is valid
+            if not PasswordResetTokenGenerator().check_token(user, attrs['token']):
+                raise serializers.ValidationError("Token is invalid or expired.")
+            
+            # If everything passes, then the user's new password is set in the database
+            user.set_password(attrs['password'])
+            user.save()
+            return user
+
+        except:
+            raise serializers.ValidationError("Invalid token or user")
+
+
+
+
+
 
 # ***** LESSON SERIALIZERS *****
 """
@@ -73,6 +160,9 @@ class FreeLessonSerializer(serializers.ModelSerializer):
 """
 class PaidLessonSerializer(serializers.ModelSerializer):
     pass
+
+
+
 
 
 # ***** TASK SERIALIZERS *****
