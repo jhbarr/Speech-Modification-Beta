@@ -32,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-# AUTH_USER_MODEL = "api.CustomUser" ADD LATER 
+AUTH_USER_MODEL = "api.CustomUser"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
