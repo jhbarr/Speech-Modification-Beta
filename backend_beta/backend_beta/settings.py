@@ -32,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-AUTH_USER_MODEL = "api.CustomUser"
+AUTH_USER_MODEL = "authentication.CustomUser"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'api',
+    'authentication',
     'corsheaders',
 ]
 
