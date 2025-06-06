@@ -9,7 +9,12 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view(), name='refresh'),
 
     # Password reset routes
-    path('request-password-reset/', views.RequestPasswordResetView.as_view(), name='reset password request'),
-    path('password-reset-confirm/<uidb64>/<token>/', views.PasswordTokenCheckView.as_view(), name='password-reset-confirm'),
-    path('set-new-password/', views.SetNewPasswordView.as_view(), name='set new password'), 
+    # path('request-password-reset/', views.RequestPasswordResetView.as_view(), name='reset password request'),
+    # path('password-reset-confirm/<uidb64>/<token>/', views.PasswordTokenCheckView.as_view(), name='password-reset-confirm'),
+    # path('set-new-password/', views.SetNewPasswordView.as_view(), name='set new password'), 
+
+    # Password reset routes with verification code
+    path('request-password-reset/', views.RequestPasswordResetWithCodeView.as_view(), name='reset password request'),
+    path('password-reset-confirm/<email>/<code>/', views.PasswordTokenWithCodeCheckView.as_view(), name='password-reset-confirm'),
+    path('set-new-password/', views.SetNewPasswordWithCodeView.as_view(), name='set new password'), 
 ]

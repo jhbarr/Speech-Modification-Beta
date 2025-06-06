@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
+from datetime import timedelta
 
 from .managers import CustomUserManager
 
@@ -33,3 +35,30 @@ class CustomUser(AbstractUser):
     # Print out an email 
     def __str__(self):
         return self.email
+    
+
+
+
+# ***** PASSWORD RESET MODELS *****
+"""
+* PasswordResetVerificationCode -> This is a model that is used to store in-use and previously used password verification codes 
+*   attributed to specific users. This is so that the backend can store verification codes in use 
+* 
+* FIELDS
+*   user (Foreign Key) -> This references a specific CustomUser object to which the verification code is attributed
+*   code (Integer Field) -> A six-digit randomized verification code used for password reset confirmation
+*   created_at (DateTimeField) -> A time stamp to ensure that verification codes are not valid indefinitely
+*   is_used (Boolean Field) -> This indicates whether the verification code has yet been used for a password reset
+* 
+* ADDITIONAL
+* create a is_expired() method to check whether a verification code has timed out and is not longer valid
+"""
+class PasswordResetVerificationCode(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    # A method to check whether the verification code represented by this database instance is valid anymore
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)

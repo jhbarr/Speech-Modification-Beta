@@ -4,7 +4,7 @@ from django.utils.encoding import smart_str
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
-from .models import CustomUser
+from .models import CustomUser, PasswordResetVerificationCode
 
 """
 *** NOTES ***
@@ -71,7 +71,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 
-# ***** PASSWORD RESET SERIALIZERS *****
+# ***** PASSWORD RESET SERIALIZERS -- USING URLS *****
 """
 * ResetPasswordRequestSerializer -> This is a serializer that checks the validity of the email that was sent to the password reset request
 *   If the email exists in the database, then the serializer will return true
@@ -128,3 +128,49 @@ class SetNewPasswordSerializer(serializers.Serializer):
 
         except:
             raise serializers.ValidationError("Invalid token or user")
+
+
+
+
+
+
+# ***** PASSWORD RESET VIEWS -- USING VERIFICATION CODE *****
+"""
+* SetNewPasswordWithCodeSerializer -> This serializer will check whether the verification code provided is valid and can be attributed
+*   to the specified user
+* 
+* FIELDS
+*   validate() -> This validates all of the attributes
+"""
+class SetNewPasswordWithCodeSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+
+    def validate(self, attrs):
+        try:
+            # Retrieve the user object with theh specified email
+            user = CustomUser.objects.get(email=attrs['email'])
+
+            # Retrieve the most recent verification code object with the specified code
+            code_entry = PasswordResetVerificationCode.objects.filter(
+                user=user,
+                code=attrs['code'],
+                is_used=False
+            ).latest('created_at')
+
+            # Check to see if the code has expired yet
+            if code_entry.is_expired():
+                raise serializers.ValidationError("Verification code has expired")
+
+            code_entry.is_used = True
+            code_entry.save()
+
+            # Set the new user's password and save that change to the database
+            user.set_password(attrs['password'])
+            user.save()
+
+            return user
+
+        except PasswordResetVerificationCode.DoesNotExist:
+            raise serializers.ValidationError("Invalid code")

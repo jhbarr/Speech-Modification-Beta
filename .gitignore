@@ -4,6 +4,9 @@
 env/
 **/__pycache__/
 **/migrations/
+.python-version
+
+backend_beta/__pycache__/settings.cpython-311.pyc
 
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 

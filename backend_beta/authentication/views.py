@@ -2,16 +2,16 @@ from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.permissions import  AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, smart_str
-from rest_framework.response import Response
+from django.contrib.auth.tokens import PasswordResetTokenGenerator # Not necessary
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode # Not necessary
+from django.utils.encoding import force_bytes, smart_str # Not necessary
 from django.core.mail import send_mail
 from django.conf import settings
+import random
 
 
-from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer, ResetPasswordRequestSerializer, SetNewPasswordSerializer
-from .models import CustomUser
+from .serializers import CustomUserSerializer, CustomTokenObtainPairSerializer, ResetPasswordRequestSerializer, SetNewPasswordSerializer, SetNewPasswordWithCodeSerializer
+from .models import CustomUser, PasswordResetVerificationCode
 
 
 # ***** USER AUTHENTICATION VIEWS *****
@@ -52,7 +52,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 
-# ***** PASSWORD RESET VIEWS *****
+# ***** PASSWORD RESET VIEWS -- USING URLS *****
 """
 * RequestPasswordResetView -> This sends an email to the user with a password reset link and a password reset token
 * 
@@ -131,4 +131,99 @@ class SetNewPasswordView(generics.GenericAPIView):
     def patch(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        return Response({"message": "Password reset successful"}, status=status.HTTP_200_OK)
+    
+
+
+
+
+
+# ***** PASSWORD RESET VIEWS -- USING VERIFICATION CODE *****
+"""
+* RequestPasswordResetWithCodeView -> This sends an email to the user with a password reset verification code
+* 
+* FIELDS
+*   post() -> This sends the email to the user along with a special password reset token 
+* 
+* ADDITIONAL
+* The post request handles sending an email to the user with the one the database has on file. The url is sent with the a verification code that
+* the user can use to reset their password in the app
+"""
+class RequestPasswordResetWithCodeView(generics.GenericAPIView):
+    serializer_class = ResetPasswordRequestSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = CustomUser.objects.get(email=serializer.validated_data['email'])
+        code = f'{random.randint(100000, 999999)}'
+
+        PasswordResetVerificationCode.objects.create(user=user, code=code)
+
+        print(code)
+
+        # Send an email to the user
+        # send_mail(
+        #     subject="Password Reset Request",
+        #     message=f"Use the code below to reset your password:\n{code}",
+        #     from_email=settings.DEFAULT_FROM_EMAIL,
+        #     recipient_list=[user.email],
+        # )
+
+        return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
+
+"""
+* PasswordTokenWithCodeCheckView -> This view checks the validity of the provided code and user email. This can be used by the frontend
+*   to check whether the password reset link has become stale and should resend the password reset link
+* 
+* FIELDS
+*   get() -> This method retrieves the user's email and verification code from the http request and checks whether the code 
+*       is stil valid
+"""   
+class PasswordTokenWithCodeCheckView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, email, code):
+        try:
+            # Retrieve the user object with theh specified email
+            user = CustomUser.objects.get(email=email)
+
+            # Retrieve the most recent verification code object with the specified code
+            code_entry = PasswordResetVerificationCode.objects.filter(
+                user=user,
+                code=code,
+                is_used=False
+            ).latest('created_at')
+
+            # Check to see if the code has expired yet
+            if code_entry.is_expired():
+                return Response({'error': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response({'success': True, 'message': 'Code is valid'}, status=status.HTTP_200_OK)
+
+        except Exception:
+            return Response({'error': 'Error handling verification code'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+"""
+* SetNewPasswordWithCodeView -> This view allows the user to reset their password so long as they provide a valid token and the uid matches their user account
+* 
+* FIELDS 
+*   patch() -> This is an HTTP request to update a resource. Therefore, in this case it is used to update the database with the provided password 
+*       from the user's end
+* 
+* ADDITIONAL
+* The SetNewPasswordSerializer handles checking whether the provided token and user id are valid and will also handle saving the new password
+* to the database. This view is the interaface by which the serializer can interact with the provided information
+"""
+class SetNewPasswordWithCodeView(generics.GenericAPIView):
+    serializer_class = SetNewPasswordWithCodeSerializer
+    permission_classes = [AllowAny]
+
+    def patch(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         return Response({"message": "Password reset successful"}, status=status.HTTP_200_OK)
