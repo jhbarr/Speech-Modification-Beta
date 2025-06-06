@@ -1,0 +1,10 @@
+npm install axios
+npm install @react-navigation/native
+npm install @react-navigation/stack
+npm install @react-navigation/native-stack
+
+# If there are any problems, install npx expo install react-native-gesture-handler
+# See full instructions at: https://reactnavigation.org/docs/stack-navigator/ 
+
+npx expo install expo-secure-store
+npx expo install react-native-screens react-native-safe-area-context
