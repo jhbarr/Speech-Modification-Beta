@@ -172,7 +172,7 @@ class RequestPasswordResetWithCodeView(generics.GenericAPIView):
         #     recipient_list=[user.email],
         # )
 
-        return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
+        return Response({"success": True, "message": "Password reset link sent."}, status=status.HTTP_200_OK)
 
 """
 * PasswordTokenWithCodeCheckView -> This view checks the validity of the provided code and user email. This can be used by the frontend
@@ -199,12 +199,12 @@ class PasswordTokenWithCodeCheckView(generics.GenericAPIView):
 
             # Check to see if the code has expired yet
             if code_entry.is_expired():
-                return Response({'error': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'success': False, 'error': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
             
             return Response({'success': True, 'message': 'Code is valid'}, status=status.HTTP_200_OK)
 
         except Exception:
-            return Response({'error': 'Error handling verification code'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'success': False, 'error': 'Error handling verification code'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 """
@@ -226,4 +226,4 @@ class SetNewPasswordWithCodeView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        return Response({"message": "Password reset successful"}, status=status.HTTP_200_OK)
+        return Response({"success" : True, "message": "Password reset successful"}, status=status.HTTP_200_OK)

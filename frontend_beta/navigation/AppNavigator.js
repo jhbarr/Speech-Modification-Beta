@@ -8,6 +8,9 @@ import { AuthContext } from '../context/AuthContext';
 import LoginScreen from '../auth_screens/LoginScreen';
 import RegisterScreen from '../auth_screens/RegisterScreen';
 import HomeScreen from '../inner_screens/HomeScreen';
+import ForgotPasswordScreen from '../auth_screens/ForgotPasswordScreen';
+import VerificationCodeScreen from '../auth_screens/VerificationCodeScreen';
+import PasswordConfirmationScreen from '../auth_screens/PasswordConfirmationScreen';
 
 
 const Stack = createNativeStackNavigator()
@@ -48,6 +51,10 @@ export default function AppNavigator() {
                     <>
                     <Stack.Screen name='login' component={LoginScreen}/>
                     <Stack.Screen name='register' component={RegisterScreen}/>
+
+                    <Stack.Screen name='forgot password screen' component={ForgotPasswordScreen}/>
+                    <Stack.Screen name='verification code screen' component={VerificationCodeScreen}/>
+                    <Stack.Screen name='password confirmation screen' component={PasswordConfirmationScreen}/>
                     </>
                 )}
             </Stack.Navigator>

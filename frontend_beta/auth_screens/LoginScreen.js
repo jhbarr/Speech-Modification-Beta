@@ -42,18 +42,26 @@ export default function LoginScreen() {
             value={password}
           />
       </View>
-      <Text>Forgot Password?</Text>
+
+      <TouchableOpacity
+          onPress={() => navigation.navigate('forgot password screen')}
+        >
+        <Text style={styles.signUpLink}>Forgot Password</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity
           style={styles.button}
           onPress={() => login(email, password)}
         >
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
+
       <TouchableOpacity onPress={() => navigation.replace('register')}>
           <Text style={styles.signUp}>Don't have an account? 
             <Text style={styles.signUpLink}> Sign Up</Text>
           </Text>
       </TouchableOpacity>
+
     </View>
     </View>
   )
