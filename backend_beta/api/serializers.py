@@ -4,7 +4,7 @@ from django.utils.encoding import force_bytes, smart_str, DjangoUnicodeDecodeErr
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
-from .models import CustomUser
+from .models import FreeLesson, PaidLesson, FreeTask, PaidTask
 
 """
 *** NOTES ***
@@ -25,7 +25,9 @@ and other metadata relevant to the serialization process
 *   lessonTitle (Email Field) -> The title of the lesson that has been passed as input
 """
 class FreeLessonSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = FreeLesson
+        fields = ['id', 'lesson_title']
 
 """
 * PaidLessonSerializer -> This serializer is used to serialize and deserialize a PaidLesson model
@@ -37,8 +39,9 @@ class FreeLessonSerializer(serializers.ModelSerializer):
 *   lessonTitle (Char Field) -> The title of the lesson that has been passed as input
 """
 class PaidLessonSerializer(serializers.ModelSerializer):
-    pass
-
+    class Meta:
+        model = PaidLesson
+        fields = ['id', 'lesson_title']
 
 
 
@@ -56,7 +59,9 @@ class PaidLessonSerializer(serializers.ModelSerializer):
 *   lesson (Foreign Key Reference) -> The reference to the lesson to which the task instance belongs
 """
 class FreeTaskSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = FreeTask
+        fields = ['id', 'task_title', 'content', 'lesson']
 
 """
 * PaidTaskSerializer -> The serializer used to serialize and deserialize the PaidTask model
@@ -70,4 +75,6 @@ class FreeTaskSerializer(serializers.ModelSerializer):
 *   lesson (Foreign Key Reference) -> The reference to the lesson to which the task instance belongs
 """
 class PaidTaskSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = PaidTask
+        fields = ['id', 'task_title', 'content', 'lesson']

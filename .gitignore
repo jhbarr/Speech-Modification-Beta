@@ -1,6 +1,8 @@
 # Ignore all .env files
 .env
 
+*.ini
+
 env/
 **/__pycache__/
 **/migrations/
