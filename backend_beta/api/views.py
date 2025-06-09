@@ -1,10 +1,11 @@
-from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from django.shortcuts import get_object_or_404
 
 from .permissions import IsPayingUser
+from .models import FreeLesson, PaidLesson, FreeTask, PaidTask
+from .serializers import FreeLessonSerializer, PaidLessonSerializer, FreeTaskSerializer, PaidTaskSerializer
 
 
 
@@ -21,7 +22,9 @@ from .permissions import IsPayingUser
 * Since this is a ListAPIView, that means that the route allows GET requests in order to retrieve objects from the database
 """
 class QueryAllFreeLessonsView(generics.ListAPIView):
-    pass
+    queryset = FreeLesson.objects.all()
+    serializer_class = FreeLessonSerializer
+    permission_classes = [AllowAny] # Change later
 
 """
 * QueryAllPaidLessonsView -> This is a view that is used to query all of the paid lessons in the database
@@ -35,7 +38,9 @@ class QueryAllFreeLessonsView(generics.ListAPIView):
 * Since this is a ListAPIView, that means that the route allows GET requests in order to retrieve objects from the database
 """
 class QueryAllPaidLessonsView(generics.ListAPIView):
-    pass
+    queryset = PaidLesson.objects.all()
+    serializer_class = PaidLessonSerializer
+    permission_classes = [AllowAny]
 
 
 
@@ -55,7 +60,9 @@ class QueryAllPaidLessonsView(generics.ListAPIView):
 * Since this is a ListAPIView, that means that the route allows GET requests in order to retrieve objects from the database 
 """
 class QueryAllFreeTasksView(generics.ListAPIView):
-    pass
+    queryset = FreeTask.objects.all()
+    serializer_class = FreeTaskSerializer
+    permission_classes = [AllowAny]
 
 """
 * QueryAllPaidTasksView -> This is a aview that is used to query all of the paid tasks from the database
@@ -69,7 +76,9 @@ class QueryAllFreeTasksView(generics.ListAPIView):
 * Since this is a ListAPIView, that means that the route allows GET requests in order to retrieve objects from the database 
 """
 class QueryAllPaidTasksView(generics.ListAPIView):
-    pass
+    queryset = PaidTask.objects.all()
+    serializer_class = PaidTaskSerializer
+    permission_classes = [AllowAny]
 
 """
 * QueryFreeTaskByLesson -> This view is used to query free tasks that belong to a specific lesson
@@ -84,7 +93,13 @@ class QueryAllPaidTasksView(generics.ListAPIView):
 * Since this is a ListAPIView, that means that the route allows GET requests in order to retrieve objects from the database 
 """
 class QueryFreeTaskByLesson(generics.ListAPIView):
-    pass
+    serializer_class = FreeTaskSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        lesson_title = self.kwargs.get('lesson_title')
+        lesson = get_object_or_404(FreeLesson, lesson_title__iexact=lesson_title)
+        return FreeTask.objects.filter(lesson=lesson)
 
 """
 * QueryPaidTaskByLesson -> This view is used to query paid tasks that belong to a specific lesson
@@ -100,7 +115,13 @@ class QueryFreeTaskByLesson(generics.ListAPIView):
 * Since this is a ListAPIView, that means that the route allows GET requests in order to retrieve objects from the database 
 """
 class QueryPaidTaskByLesson(generics.ListAPIView):
-    pass
+    serializer_class = PaidTaskSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        lesson_title = self.kwargs.get('lesson_title')
+        lesson = get_object_or_404(PaidLesson, lesson_title__iexact=lesson_title)
+        return PaidTask.objects.filter(lesson=lesson)
 
 
 

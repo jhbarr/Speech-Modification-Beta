@@ -1,13 +1,13 @@
 import psycopg2
-from database_tests.config import load_config
-from database_tests import insertion_functions
-from database_tests import query_functions
-from database_tests.connect import connect_one, connect_pool
+from database_beta.config import load_config
+from database_beta import insertion_functions
+from database_beta import query_functions
+from database_beta.connect import connect_one, connect_pool
 
 import json
 
 # Now import the function
-import scraping_tests.scraping_main as scrape
+import scraping_beta.scraping_main as scrape
 
 if __name__ == "__main__":
     paid = True

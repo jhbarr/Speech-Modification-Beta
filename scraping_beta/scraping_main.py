@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 import requests
 import json
 
-from scraping_tests import extraction_functions
-from scraping_tests import paid_extraction_functions
+from scraping_beta import extraction_functions
+from scraping_beta import paid_extraction_functions
 
 """
 * get_links : This function goes through the given document and extracts the links and names of different pages on the website
