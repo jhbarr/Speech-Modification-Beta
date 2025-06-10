@@ -141,18 +141,19 @@ class UserFreeTaskCompleteView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        email = request.data['email']
+
         try:
-            email = self.kwargs.get('email')
-            user = get_object_or_404(CustomUser, email__iexact=email)
+            user = CustomUser.objects.get(email__iexact=email)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found with that email'}, status=status.HTTP_404_NOT_FOUND)
 
-            tasks = UserCompletedFreeTasks.objects.filter(
-                user=user
-            ).values_list('task__task_title', flat=True)
+        tasks = UserCompletedFreeTasks.objects.filter(
+            user=user
+        ).values_list('task__task_title', flat=True)
 
-            return Response({"data" : tasks}, status=status.HTTP_200_OK)
+        return Response({"data" : tasks}, status=status.HTTP_200_OK)
         
-        except:
-            return Response({'error': 'Email is invalid'}, status=status.HTTP_400_BAD_REQUEST)
 
 
     def post(self, request):
