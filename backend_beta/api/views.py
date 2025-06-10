@@ -44,9 +44,6 @@ class QueryAllPaidLessonsView(generics.ListAPIView):
 
 
 
-
-
-
 # ***** TASK VIEWS *****
 """
 * QueryAllFreeTasksView -> This is a aview that is used to query all of the free tasks from the database

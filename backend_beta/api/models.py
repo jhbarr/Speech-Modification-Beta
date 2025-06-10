@@ -14,7 +14,7 @@ class FreeLesson(models.Model):
     lesson_title = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
-        print(self.lesson_title)
+        return self.lesson_title
 
 """
 * PaidLesson -> A model to describe the table representing the paid lessons that have been scraped from the 
@@ -27,7 +27,7 @@ class PaidLesson(models.Model):
     lesson_title = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
-        print(self.lesson_title)
+        return self.lesson_title
 
 
 # ***** TASK MODELS *****
@@ -45,7 +45,7 @@ class FreeTask(models.Model):
     lesson = models.ForeignKey(FreeLesson, on_delete=models.CASCADE, related_name='task')
 
     def __str__(self):
-        print(self.task_title)
+        return self.task_title
 
 """
 * PaidTask -> A model representing all of the paid tasks from the website
@@ -61,7 +61,7 @@ class PaidTask(models.Model):
     lesson = models.ForeignKey(PaidLesson, on_delete=models.CASCADE, related_name='task')
 
     def __str__(self):
-        print(self.task_title)
+        return self.task_title
 
 
 # ***** PROGRESS TRACKING MODELS *****
@@ -75,26 +75,40 @@ class PaidTask(models.Model):
 * ADDITIONAL
 * The user and task fields much be unique pairings for each entry in this table. This is because a user cannot complete a task twice
 """
-# class UserCompletedFreeTasks(models.Model):
-#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-#     task = models.ForeignKey(FreeTask, on_delete=models.CASCADE)
+class UserCompletedFreeTasks(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    task = models.ForeignKey(FreeTask, on_delete=models.CASCADE)
 
-# """
-# * UserCompletedFreeLessons -> This table will keep track of the different lessons that a user has completed
-# *   A completed lesson is when a user has completed all of the tasks within a lesson
-# * 
-# * FIELDS
-# *   user (Foreign Key Reference) -> This will reference a specific user 
-# *   lesson (Foreign Key Reference) -> This will reference a specific lesson object
-# *
-# * ADDITIONAL
-# * The user and lesson fields much be unique pairings for each entry in this table. This is because a user cannot complete a lesson twice
-# """
-# class UserCompletedFreeLessons(models.Model):
-#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-#     lesson = models.ForeignKey(FreeLesson, on_delete=models.CASCADE)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'task'], name='unique_task'),
+        ]
 
+    def __str__(self):
+        return self.user, self.task
 
+"""
+* UserCompletedFreeLessons -> This table will keep track of the different lessons that a user has completed
+*   A completed lesson is when a user has completed all of the tasks within a lesson
+* 
+* FIELDS
+*   user (Foreign Key Reference) -> This will reference a specific user 
+*   lesson (Foreign Key Reference) -> This will reference a specific lesson object
+*
+* ADDITIONAL
+* The user and lesson fields much be unique pairings for each entry in this table. This is because a user cannot complete a lesson twice
+"""
+class UserCompletedFreeLessons(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(FreeLesson, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'lesson'], name='unique_lesson'),
+        ]
+
+    def __str__(self):
+        return self.user, self.lesson
 
 
 

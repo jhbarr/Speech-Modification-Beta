@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import FreeLesson, PaidLesson, FreeTask, PaidTask
+from .models import FreeLesson, PaidLesson, FreeTask, PaidTask, UserCompletedFreeLessons, UserCompletedFreeTasks
+from authentication.models import CustomUser
 
 """
 *** NOTES ***
@@ -74,3 +75,68 @@ class PaidTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaidTask
         fields = ['id', 'task_title', 'content', 'lesson']
+
+
+
+
+# ***** COMPLETED TASK AND LESSON SERIALIZERS *****
+"""
+* CompletedTaskSerializer -> This is a serializer used to serialize and deserialize the UserCompletedFreeTasks models
+* 
+* FIELDS
+*   id (integer) -> The primary key for the task
+*   user (Foreign Key Reference) -> A reference to a unique user model instance. This is the user that is completing the lesson
+*   task (Foreign Key Reference) -> a reference to a unique free task model instance. 
+* 
+* ADDITIONAL
+* This function should specify that a new UserCompletedFreeLessons model instance should be created if all of the tasks within that lesson 
+* are now complete after this task
+"""
+class CompletedFreeTaskSerializer(serializers.Serializer):
+    # These are the fields of the serializer, typically under the meta class
+    # They are validated automatically and put into the attrs dictionary which is passed to validate()
+    email = serializers.CharField()
+    task_title = serializers.CharField()
+
+    def validate(self, attrs):
+        try:
+            # Validate that the user and task exist based on the email and task_title respectively
+            user = CustomUser.objects.get(email=attrs['email'])
+            task = FreeTask.objects.get(task_title=attrs['task_title'])
+
+            attrs['user'] = user
+            attrs['task'] = task
+            return attrs
+
+        except (CustomUser.DoesNotExist, FreeTask.DoesNotExist):
+            raise serializers.ValidationError("Invalid email or task title")
+        
+    def create(self, validated_data):
+        user = validated_data['user']
+        task = validated_data['task']
+
+        # Create a new table entry with the specific user and task
+        UserCompletedFreeTasks.objects.create(user=user, task=task)
+
+        # Get the lesson associated with the task
+        lesson = task.lesson
+        
+        # We can do this becuase the related name to the lesson foreign key reference in the FreeTask model is 'task'
+        # Therefore, from a FreeLesson instance, you can access all of the related FreeTask instances with .task
+        all_task_ids = lesson.task.values_list('id', flat=True)
+
+        # Go through the task ForeignKey on UserCompletedFreeTasks, then through the lesson ForeignKey on FreeTask
+        # Give me the UserCompletedFreeTasks for this user where the task is from this specific lesson.
+        # that is what the double underscore is saying
+        user_completed_task_ids = UserCompletedFreeTasks.objects.filter(
+            user=user, 
+            task__lesson=lesson
+        ).values_list('task_id', flat=True) # This gives the list of task id's without returning the full objects
+
+        # This just sees if all of the task ids belonging to the specific lesson are in the Completed Task table
+        # and if so, that means that the lesson itself should be marked as completed
+        if set(all_task_ids).issubset(set(user_completed_task_ids)):
+            # Mark the lesson as complete if not already
+            UserCompletedFreeLessons.objects.get_or_create(user=user, lesson=lesson)
+
+        return validated_data
