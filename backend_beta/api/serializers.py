@@ -88,6 +88,11 @@ class PaidTaskSerializer(serializers.ModelSerializer):
 *   user (Foreign Key Reference) -> A reference to a unique user model instance. This is the user that is completing the lesson
 *   task (Foreign Key Reference) -> a reference to a unique free task model instance. 
 * 
+* METHODS
+*   validate() -> This takes in an email and task_title fields and checks if they both belong to existent user and task respectively
+*   create() -> This is called on serializer.save(). It saves a new UserCompletedFreeTask instance to the database
+*       but it also saves a new UserCompletedFreeLesson if the user has finished all of the tasks in a given lesson
+* 
 * ADDITIONAL
 * This function should specify that a new UserCompletedFreeLessons model instance should be created if all of the tasks within that lesson 
 * are now complete after this task
@@ -143,3 +148,19 @@ class CompletedFreeTaskSerializer(serializers.Serializer):
             'email': user.email,
             'task_title': task.task_title
         }
+    
+
+"""
+* CompletedFreeLessonSerializer -> This is used to serialize and deserialize the UserCompletedFreeLesson object
+* 
+* FIELDS 
+*   user -> The CustomUser who has completed the lesson
+*   lesson -> The FreeLesson that has been completed
+"""
+class CompletedFreeLessonSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    lesson_title = serializers.CharField(source='lesson.lesson_title', read_only=True)
+
+    class Meta:
+        model = UserCompletedFreeLessons
+        fields = ['id', 'user_email', 'lesson_title']

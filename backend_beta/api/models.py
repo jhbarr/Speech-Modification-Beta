@@ -111,4 +111,3 @@ class UserCompletedFreeLessons(models.Model):
         return self.user, self.lesson
 
 
-

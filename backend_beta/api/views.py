@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
 from .permissions import IsPayingUser
-from .models import FreeLesson, PaidLesson, FreeTask, PaidTask, UserCompletedFreeTasks
-from .serializers import FreeLessonSerializer, PaidLessonSerializer, FreeTaskSerializer, PaidTaskSerializer, CompletedFreeTaskSerializer
+from .models import FreeLesson, PaidLesson, FreeTask, PaidTask, UserCompletedFreeTasks, UserCompletedFreeLessons
+from .serializers import FreeLessonSerializer, PaidLessonSerializer, FreeTaskSerializer, PaidTaskSerializer, CompletedFreeTaskSerializer, CompletedFreeLessonSerializer
 
 from authentication.models import CustomUser
 
@@ -26,7 +26,7 @@ from authentication.models import CustomUser
 class QueryAllFreeLessonsView(generics.ListAPIView):
     queryset = FreeLesson.objects.all()
     serializer_class = FreeLessonSerializer
-    permission_classes = [AllowAny] # Change later
+    permission_classes = [IsAuthenticated]
 
 """
 * QueryAllPaidLessonsView -> This is a view that is used to query all of the paid lessons in the database
@@ -42,7 +42,7 @@ class QueryAllFreeLessonsView(generics.ListAPIView):
 class QueryAllPaidLessonsView(generics.ListAPIView):
     queryset = PaidLesson.objects.all()
     serializer_class = PaidLessonSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsPayingUser]
 
 
 
@@ -61,7 +61,7 @@ class QueryAllPaidLessonsView(generics.ListAPIView):
 class QueryAllFreeTasksView(generics.ListAPIView):
     queryset = FreeTask.objects.all()
     serializer_class = FreeTaskSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
 """
 * QueryAllPaidTasksView -> This is a aview that is used to query all of the paid tasks from the database
@@ -77,7 +77,7 @@ class QueryAllFreeTasksView(generics.ListAPIView):
 class QueryAllPaidTasksView(generics.ListAPIView):
     queryset = PaidTask.objects.all()
     serializer_class = PaidTaskSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsPayingUser]
 
 """
 * QueryFreeTaskByLesson -> This view is used to query free tasks that belong to a specific lesson
@@ -93,7 +93,7 @@ class QueryAllPaidTasksView(generics.ListAPIView):
 """
 class QueryFreeTaskByLesson(generics.ListAPIView):
     serializer_class = FreeTaskSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         lesson_title = self.kwargs.get('lesson_title')
@@ -114,7 +114,7 @@ class QueryFreeTaskByLesson(generics.ListAPIView):
 """
 class QueryPaidTaskByLesson(generics.ListAPIView):
     serializer_class = PaidTaskSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsPayingUser]
 
     def get_queryset(self):
         lesson_title = self.kwargs.get('lesson_title')
@@ -138,13 +138,11 @@ class QueryPaidTaskByLesson(generics.ListAPIView):
 """
 class UserFreeTaskCompleteView(generics.GenericAPIView):
     serializer_class = CompletedFreeTaskSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        email = request.headers.get('email')
-        print(email)
-
         try:
+            email = self.kwargs.get('email')
             user = get_object_or_404(CustomUser, email__iexact=email)
 
             tasks = UserCompletedFreeTasks.objects.filter(
@@ -176,6 +174,10 @@ class UserFreeTaskCompleteView(generics.GenericAPIView):
 *   permission_classes -> This should be IsAuthenticated so that it can only be retrieved by a user that has logged in
 """
 class UserFreeLessonCompleteView(generics.ListAPIView):
-    pass
+    serializer_class = CompletedFreeLessonSerializer
+    permission_classes = [IsAuthenticated]
 
-
+    def get_queryset(self):
+        email = self.kwargs.get('email')
+        user = get_object_or_404(CustomUser, email__iexact=email)
+        return UserCompletedFreeLessons.objects.filter(user=user)
