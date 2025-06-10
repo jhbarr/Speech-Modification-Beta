@@ -120,7 +120,7 @@ class CompletedFreeTaskSerializer(serializers.Serializer):
 
         # Get the lesson associated with the task
         lesson = task.lesson
-        
+
         # We can do this becuase the related name to the lesson foreign key reference in the FreeTask model is 'task'
         # Therefore, from a FreeLesson instance, you can access all of the related FreeTask instances with .task
         all_task_ids = lesson.task.values_list('id', flat=True)
@@ -139,4 +139,7 @@ class CompletedFreeTaskSerializer(serializers.Serializer):
             # Mark the lesson as complete if not already
             UserCompletedFreeLessons.objects.get_or_create(user=user, lesson=lesson)
 
-        return validated_data
+        return {
+            'email': user.email,
+            'task_title': task.task_title
+        }
