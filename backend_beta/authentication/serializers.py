@@ -34,7 +34,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['email', 'password', 'is_paying_user']
         extra_kwargs = {'password': {'write_only' : True}} # This makes it so that the password is not accessible 
-    
+
     # The create() function specifies that a new CustomUser instance should be created and saved to the database 
     # using the provided parameters
     def create(self, validated_data):

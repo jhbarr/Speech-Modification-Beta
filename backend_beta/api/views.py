@@ -178,7 +178,16 @@ class UserFreeLessonCompleteView(generics.ListAPIView):
     serializer_class = CompletedFreeLessonSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        email = self.kwargs.get('email')
-        user = get_object_or_404(CustomUser, email__iexact=email)
-        return UserCompletedFreeLessons.objects.filter(user=user)
+    def get(self, request):
+        email = request.data['email']
+
+        try:
+            user = CustomUser.objects.get(email__iexact=email)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found with that email'}, status=status.HTTP_404_NOT_FOUND)
+
+        lessons = UserCompletedFreeLessons.objects.filter(
+            user=user
+        ).values_list('lesson__lesson_title', flat=True)
+
+        return Response({"data" : lessons}, status=status.HTTP_200_OK)

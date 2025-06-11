@@ -26,24 +26,32 @@ export const AuthProvider = ({ children }) => {
     */
     const login = async ( email, password ) => {
         // Check if the email and password fields were both input in valid formats
-        if (email != null && password != null) {
+        if (email != '' && password != '') {
             try {
                 // Clarify that the frontend and backend are attempting to communicate
                 setAuthLoading(true)
                 
                 // Post the email and password to the backend and wait for a token response
                 const res = await api.post('auth/login/', { email, password })
-                await saveTokens({refresh: res.data.refresh, access: res.data.access})
+
+                const data = res.data
+                await saveTokens({refresh: data.refresh, access: data.access})
                 
                 // If the retrieval was successful, set the user's authentication state to true
                 setIsAuthenticated(true)
                 setAuthLoading(false)
             } 
             catch (error) {
-                // Give an alert to the user
-                Alert.alert("Incorrect Username or Password", error)
-                setIsAuthenticated(false)
+                let errorMessage = "Something went wrong";
+
+                if (error.response && error.response.data && error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
                 setAuthLoading(false)
+                Alert.alert("Invalid credentials", errorMessage);
             }
         }
         // Tell the user to correctly put in their email and password
@@ -72,10 +80,16 @@ export const AuthProvider = ({ children }) => {
                 login(email, password)
             }
             catch (error) {
-                // Give an error message as to why the registration process didn't work
-                Alert.alert("Username already exists", error)
+                let errorMessage = "Something went wrong";
+
+                if (error.response && error.response.data && error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
                 setAuthLoading(false)
-                setIsAuthenticated(false)
+                Alert.alert("Email already exists", errorMessage);
             }
         }
         // Tell the user to correctly put in their email and password
@@ -83,6 +97,8 @@ export const AuthProvider = ({ children }) => {
             Alert.alert("Please enter both you email and password")
         }
    }
+
+
 
    /*
    * logout (async) -> This function logs the user out of their application account and clears their tokens within frontend storage
@@ -121,13 +137,29 @@ export const AuthProvider = ({ children }) => {
         if (expiry && now >= expiry - 30) {
             try {
                 const refresh = await getRefreshToken()
-                const res = await api.request('refresh/', { refresh })
+                
+                if (refresh) {
+                    const res = await api.request('refresh/', { refresh })
+                }
+                else {
+                    Alert.alert("No refresh token found")
+                }
 
                 await saveTokens({ access: res.data.access, refresh })
                 setIsAuthenticated(true)
             }
             catch (error) {
-                console.log("Error refreshing access token automatically")
+                let errorMessage = "Something went wrong";
+                console.log(error.response.data)
+
+                if (error.response && error.response.data && error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                Alert.alert("Email already exists", errorMessage);
+
                 await clearTokens()
                 setIsAuthenticated(false)
             }
@@ -151,6 +183,8 @@ export const AuthProvider = ({ children }) => {
     }
 
 
+
+    
     // This useEffect will automatically check the access token of the user and refresh it if it sees fit 
     // Both when the user first loads the app and when the user opens the app after a time of inactivity
     useEffect(() => {

@@ -13,12 +13,19 @@ export default function VerificationCodeScreen() {
 
     const [code, setCode] = useState('')
 
-
+    /*
+    * verifyCode (async) -> This function passes the user specified password verification code to the backend 
+    *   It checks whether that code is valid and whether the user should be able to reset their password 
+    */
     const verifyCode = async (code) => {
+
+        // Initially check that the code is of valid length
         if (code.length == 6){
             try{
                 const res = await api.get(`auth/password-reset-confirm/${email}/${code}/`)
                 
+                // Check if the backend response was valid
+                // If so, move the user onto the next screen of the password reset process
                 const data = res.data
                 if (data.success) {
                     navigation.navigate('password confirmation screen', {email: email, code: code});
@@ -26,6 +33,7 @@ export default function VerificationCodeScreen() {
                     Alert.alert("Verification Failed", data.error || "Unknown error");
                 }
             } 
+            // Handle backend errors gracefully
             catch (error) {
                 let errorMessage = "Something went wrong";
 

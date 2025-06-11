@@ -1,4 +1,4 @@
-import { View, TextInput, Button, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, TextInput, Button, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { useContext, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -17,7 +17,7 @@ export default function RegisterScreen() {
       register(email, password)
     }
     else {
-      console.log("Passwords do not match")
+      Alert.alert("Passwords do not match")
     }
   }
 

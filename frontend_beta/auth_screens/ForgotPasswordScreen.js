@@ -10,19 +10,43 @@ export default function ForgotPasswordScreen() {
     const navigation = useNavigation()
     const [email, setEmail] = useState('')
 
+    /*
+    * testEmail -> This function tests whether a string is in a valid email format using regular expressions
+    * 
+    * FIELDS
+    *   email (String) -> A string that should be checked
+    */
+    const testEmail = (email) => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      return emailRegex.test(email)
+    }
 
+
+    /*
+    * requestPasswordReset (async) -> This function sends a request to the backend for a password reset code
+    *   It then navigates to the code verification screen if the backend acknowledges that the provided email exists
+    * 
+    * FIELDS
+    *   email (String) -> A user provided email 
+    */
     const requestPasswordReset = async (email) => {
-        if (email != ''){
+
+        // Initially check if the provided string is actually a valid email address
+        if (testEmail(email)){
             try{
+                // Send a request to the backend for a verification code
                 const res = await api.post('auth/request-password-reset/', { email })
                 const status = res.status
                 
+                // If the status returns ok and the provided email is valid
+                // Navigate the user to the next screen in the password reset process
                 if (status == 200) {
                     navigation.navigate('verification code screen', { email: email })
                 } else {
                     Alert.alert("Verification Failed", data.error || "Unknown error");
                 }
             } 
+            // Handle backend error gracefully
             catch (error) {
                 let errorMessage = 'Something went wrong'
 

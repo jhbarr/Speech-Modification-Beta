@@ -16,5 +16,5 @@ urlpatterns = [
 
     # Routes to fetch all of the tasks and lessons completed by a specific user
     path('free-completed-tasks/', views.UserFreeTaskCompleteView.as_view(), name='get completed free tasks'),
-    path('free-completed-lessons/<str:email>/', views.UserFreeLessonCompleteView.as_view(), name='get completed free lessons'),
+    path('free-completed-lessons/', views.UserFreeLessonCompleteView.as_view(), name='get completed free lessons'),
 ]
