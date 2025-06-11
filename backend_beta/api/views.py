@@ -142,7 +142,6 @@ class UserFreeTaskCompleteView(generics.GenericAPIView):
 
     def get(self, request):
         email = request.data['email']
-
         try:
             user = CustomUser.objects.get(email__iexact=email)
         except CustomUser.DoesNotExist:
@@ -159,9 +158,9 @@ class UserFreeTaskCompleteView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        result = serializer.save()
 
-        return Response({"message": "Task completed."}, status=status.HTTP_201_CREATED)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 
@@ -178,16 +177,7 @@ class UserFreeLessonCompleteView(generics.ListAPIView):
     serializer_class = CompletedFreeLessonSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        email = request.data['email']
-
-        try:
-            user = CustomUser.objects.get(email__iexact=email)
-        except CustomUser.DoesNotExist:
-            return Response({'error': 'User not found with that email'}, status=status.HTTP_404_NOT_FOUND)
-
-        lessons = UserCompletedFreeLessons.objects.filter(
-            user=user
-        ).values_list('lesson__lesson_title', flat=True)
-
-        return Response({"data" : lessons}, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        email = self.kwargs.get('email')
+        user = get_object_or_404(CustomUser, email__iexact=email)
+        return UserCompletedFreeLessons.objects.filter(user=user)

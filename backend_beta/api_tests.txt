@@ -1,0 +1,13 @@
+api urls:
+all-free-lessons/
+    Test: Returns a list all lesson names in the free lessons table     Passed: True
+
+all-paid-lessons/
+    Test: Returns a list of all lesson names in the paid lessons table  Passed: True
+
+all-free-tasks/
+    Test: Returns a list of all task names in the free tasks table  Passed: True
+
+all-paid-tasks/
+    Test: Returns a list of all task names in the paid tasks table  Passed: True
+

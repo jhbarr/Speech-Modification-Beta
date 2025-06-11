@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db.utils import IntegrityError
 
 from .models import FreeLesson, PaidLesson, FreeTask, PaidTask, UserCompletedFreeLessons, UserCompletedFreeTasks
 from authentication.models import CustomUser
@@ -116,12 +117,20 @@ class CompletedFreeTaskSerializer(serializers.Serializer):
         except (CustomUser.DoesNotExist, FreeTask.DoesNotExist):
             raise serializers.ValidationError("Invalid email or task title")
         
+
     def create(self, validated_data):
         user = validated_data['user']
         task = validated_data['task']
 
+        task_created = False
+        lesson_created = False
+
         # Create a new table entry with the specific user and task
-        UserCompletedFreeTasks.objects.create(user=user, task=task)
+        try:
+            UserCompletedFreeTasks.objects.create(user=user, task=task)
+            task_created = True
+        except IntegrityError:
+            pass
 
         # Get the lesson associated with the task
         lesson = task.lesson
@@ -142,11 +151,16 @@ class CompletedFreeTaskSerializer(serializers.Serializer):
         # and if so, that means that the lesson itself should be marked as completed
         if set(all_task_ids).issubset(set(user_completed_task_ids)):
             # Mark the lesson as complete if not already
-            UserCompletedFreeLessons.objects.get_or_create(user=user, lesson=lesson)
+            try: 
+                UserCompletedFreeLessons.objects.create(user=user, lesson=lesson)
+                lesson_created = True
+            except IntegrityError:
+                pass
 
         return {
-            'email': user.email,
-            'task_title': task.task_title
+            'task_title': task.task_title,
+            'task' : "Task completed" if task_created else "Task already completed",
+            'lesson' : "Lesson completed" if lesson_created else None
         }
     
 
@@ -158,9 +172,8 @@ class CompletedFreeTaskSerializer(serializers.Serializer):
 *   lesson -> The FreeLesson that has been completed
 """
 class CompletedFreeLessonSerializer(serializers.ModelSerializer):
-    user_email = serializers.CharField(source='user.email', read_only=True)
     lesson_title = serializers.CharField(source='lesson.lesson_title', read_only=True)
 
     class Meta:
         model = UserCompletedFreeLessons
-        fields = ['id', 'user_email', 'lesson_title']
+        fields = ['id', 'lesson', 'lesson_title']
