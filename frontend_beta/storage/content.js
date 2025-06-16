@@ -1,4 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
 /*
@@ -14,7 +15,7 @@ import { Alert } from "react-native";
 */
 export async function saveBatchQueue( task_title ) {
     try{
-        const value = AsyncStorage.getItem("batchQueue")
+        const value = SecureStore.getItem("batchQueue")
 
         if (value != null) {
             // Key exists — parse and append
@@ -40,7 +41,7 @@ export async function saveBatchQueue( task_title ) {
 }
 
 /*
-* 
+* saveFreeTasks ?
 */
 
 /*
@@ -56,7 +57,7 @@ export async function saveBatchQueue( task_title ) {
 */
 export async function saveFreeLessons(freeLessons){ 
     try {
-        await AsyncStorage.setItem('freeLessons', JSON.stringify(freeLessons));
+        await SecureStore.setItem('freeLessons', JSON.stringify(freeLessons));
     } catch (error) {
         console.log('Error storing lessons', error)
     }

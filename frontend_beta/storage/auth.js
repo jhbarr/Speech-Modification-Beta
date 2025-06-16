@@ -73,4 +73,27 @@ export async function clearTokens() {
     await SecureStore.deleteItemAsync('accessToken');
     await SecureStore.deleteItemAsync('refreshToken');
     await SecureStore.deleteItemAsync('accessExpiry');
+
+    await SecureStore.deleteItemAsync('userEmail')
+}
+
+/*
+* saveEmail (async) -> This function saves the user's email to frontend storage so that it can persist
+*   even when global states may be lost
+* 
+* FIELDS 
+*   email (String) -> The email of the user
+*/
+export async function saveEmail(email) {
+    await SecureStore.setItem('userEmail', email)
+}
+
+/*
+* getEmail (async) -> Get the user's email from persistent storage
+* 
+* FIELDS 
+*   none
+*/
+export async function getEmail() {
+    return await SecureStore.getItem('userEmail')
 }

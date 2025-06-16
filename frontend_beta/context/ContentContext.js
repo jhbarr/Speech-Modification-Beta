@@ -8,7 +8,7 @@ export const ContentContext = createContext()
 
 export const ContentProvider = ({ children }) => {
     // The global user email kept by the AuthContext
-    const { userEmail } = useContext(AuthContext);
+    const { userEmail } = useContext(AuthContext); // NEED TO PERSISTENTLY STORE THEIR EMAIL
 
     // Global list of lessons
     const [freeLessons, setFreeLessons] = useState([])

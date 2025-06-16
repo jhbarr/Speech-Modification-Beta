@@ -1,7 +1,7 @@
 import { createContext, useEffect, useState } from 'react';
 import { Alert, AppState } from 'react-native';
 
-import { getAccessToken, getAccessExpiry, getRefreshToken, saveTokens, clearTokens } from '../storage/auth';
+import { getAccessToken, getAccessExpiry, getRefreshToken, saveTokens, clearTokens, saveEmail, getEmail } from '../storage/auth';
 import api from '../utils/api'
 
 export const AuthContext = createContext()
@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }) => {
 
                 const data = res.data
                 await saveTokens({refresh: data.refresh, access: data.access})
+                await saveEmail(email)
                 
                 // If the retrieval was successful, set the user's authentication state to true
                 setIsAuthenticated(true)
@@ -161,13 +162,12 @@ export const AuthProvider = ({ children }) => {
                 
                 if (refresh) {
                     const res = await api.request('refresh/', { refresh })
+                    await saveTokens({ access: res.data.access, refresh })
+                    setIsAuthenticated(true)
                 }
                 else {
                     Alert.alert("No refresh token found")
                 }
-
-                await saveTokens({ access: res.data.access, refresh })
-                setIsAuthenticated(true)
             }
             catch (error) {
                 let errorMessage = "Something went wrong";
@@ -197,6 +197,10 @@ export const AuthProvider = ({ children }) => {
                 setIsAuthenticated(false)
             }
         }
+        
+        // Set the global email to the user's email from persistent storage
+        const email = await getEmail()
+        setUserEmail(email)
 
         // This is so that the user doesn't see an infinite pinwheel when they first login
         setAuthLoading(false)
