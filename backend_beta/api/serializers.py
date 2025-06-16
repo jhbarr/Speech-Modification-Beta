@@ -25,7 +25,7 @@ and other metadata relevant to the serialization process
 class FreeLessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = FreeLesson
-        fields = ['id', 'lesson_title']
+        fields = ['id', 'lesson_title', 'num_tasks']
 
 """
 * PaidLessonSerializer -> This serializer is used to serialize and deserialize a PaidLesson model
@@ -39,7 +39,7 @@ class FreeLessonSerializer(serializers.ModelSerializer):
 class PaidLessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaidLesson
-        fields = ['id', 'lesson_title']
+        fields = ['id', 'lesson_title', 'num_tasks']
 
 
 
@@ -82,7 +82,7 @@ class PaidTaskSerializer(serializers.ModelSerializer):
 
 # ***** COMPLETED TASK AND LESSON SERIALIZERS *****
 """
-* CompletedTaskSerializer -> This is a serializer used to serialize and deserialize the UserCompletedFreeTasks models
+* MarkCompletedTaskSerializer -> This is a serializer used to serialize and deserialize the UserCompletedFreeTasks models
 * 
 * FIELDS
 *   id (integer) -> The primary key for the task
@@ -98,20 +98,20 @@ class PaidTaskSerializer(serializers.ModelSerializer):
 * This function should specify that a new UserCompletedFreeLessons model instance should be created if all of the tasks within that lesson 
 * are now complete after this task
 """
-class CompletedFreeTaskSerializer(serializers.Serializer):
+class MarkCompletedFreeTaskSerializer(serializers.Serializer):
     # These are the fields of the serializer, typically under the meta class
     # They are validated automatically and put into the attrs dictionary which is passed to validate()
     email = serializers.CharField()
-    task_title = serializers.CharField()
+    task_titles = serializers.ListField(child=serializers.CharField())
 
     def validate(self, attrs):
         try:
             # Validate that the user and task exist based on the email and task_title respectively
             user = CustomUser.objects.get(email=attrs['email'])
-            task = FreeTask.objects.get(task_title=attrs['task_title'])
+            tasks = FreeTask.objects.filter(task_title__in=attrs['task_titles'])
 
             attrs['user'] = user
-            attrs['task'] = task
+            attrs['tasks'] = tasks
             return attrs
 
         except (CustomUser.DoesNotExist, FreeTask.DoesNotExist):
@@ -120,49 +120,65 @@ class CompletedFreeTaskSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         user = validated_data['user']
-        task = validated_data['task']
+        tasks = validated_data['tasks']
 
-        task_created = False
-        lesson_created = False
+        newly_completed_tasks = []
+        completed_lessons = set()
+        newly_completed_lessons = []
 
-        # Create a new table entry with the specific user and task
-        try:
-            UserCompletedFreeTasks.objects.create(user=user, task=task)
-            task_created = True
-        except IntegrityError:
-            pass
-
-        # Get the lesson associated with the task
-        lesson = task.lesson
-
-        # We can do this becuase the related name to the lesson foreign key reference in the FreeTask model is 'task'
-        # Therefore, from a FreeLesson instance, you can access all of the related FreeTask instances with .task
-        all_task_ids = lesson.task.values_list('id', flat=True)
-
-        # Go through the task ForeignKey on UserCompletedFreeTasks, then through the lesson ForeignKey on FreeTask
-        # Give me the UserCompletedFreeTasks for this user where the task is from this specific lesson.
-        # that is what the double underscore is saying
-        user_completed_task_ids = UserCompletedFreeTasks.objects.filter(
-            user=user, 
-            task__lesson=lesson
-        ).values_list('task_id', flat=True) # This gives the list of task id's without returning the full objects
-
-        # This just sees if all of the task ids belonging to the specific lesson are in the Completed Task table
-        # and if so, that means that the lesson itself should be marked as completed
-        if set(all_task_ids).issubset(set(user_completed_task_ids)):
-            # Mark the lesson as complete if not already
-            try: 
-                UserCompletedFreeLessons.objects.create(user=user, lesson=lesson)
-                lesson_created = True
+        for task in tasks:
+            # Create a new table entry with the specific user and task
+            try:
+                UserCompletedFreeTasks.objects.create(user=user, task=task)
+                newly_completed_tasks.append(task.task_title)
+                print(newly_completed_tasks)
+            # User has already completed the task
             except IntegrityError:
-                pass
+                continue
+            
+            # MIGHT CAUSE ERROR
+            # We have already marked this lesson as complete
+            lesson = task.lesson
+            if lesson.id in completed_lessons:
+                continue
+                
+            # Add this as a completed lesson so that we knowo if for future tasks
+            completed_lessons.add(lesson.id)
+
+            # Get the number of tasks belonging to a specific lesson
+            # Get all of the completed tasks beloning to the lesson and the user
+            lesson_num_tasks = lesson.num_tasks
+            completed_tasks = UserCompletedFreeTasks.objects.filter(user=user, task__lesson=lesson)
+
+            # If the number of completed tasks (from the lesson) matches the number of tasks belonging to the lesson
+            # That means that all of the tasks in that lesson have been completed
+            if len(completed_tasks) == lesson_num_tasks:
+                try:
+                    UserCompletedFreeLessons.objects.create(user=user, lesson=lesson)
+                    newly_completed_lessons.append(lesson.lesson_title)
+                    print(newly_completed_lessons)
+                except IntegrityError:
+                    pass
 
         return {
-            'task_title': task.task_title,
-            'task' : "Task completed" if task_created else "Task already completed",
-            'lesson' : "Lesson completed" if lesson_created else None
+            'newly_completed_tasks': newly_completed_tasks,
+            'newly_completed_lessons': newly_completed_lessons
         }
     
+
+"""
+* GetCompletedTaskSerializer -> This is used to serialize data coming in from a query regarding which tasks a user has completed
+* 
+* FIELDS 
+*   user -> The CustomUser who has completed the task
+*   lesson -> The FreeTask that has been completed
+"""
+class GetCompletedTaskSerializer(serializers.ModelSerializer):
+    task_title = serializers.CharField(source='task.task_title', read_only=True)
+
+    class Meta:
+        model = UserCompletedFreeTasks
+        fields = ['task_title']
 
 """
 * CompletedFreeLessonSerializer -> This is used to serialize and deserialize the UserCompletedFreeLesson object
@@ -176,4 +192,4 @@ class CompletedFreeLessonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserCompletedFreeLessons
-        fields = ['id', 'lesson', 'lesson_title']
+        fields = ['lesson_title']

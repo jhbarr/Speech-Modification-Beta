@@ -199,6 +199,7 @@ class PasswordTokenWithCodeCheckView(generics.GenericAPIView):
 
             # Check to see if the code has expired yet
             if code_entry.is_expired():
+                code_entry.delete()
                 return Response({'success': False, 'error': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
             
             return Response({'success': True, 'message': 'Code is valid'}, status=status.HTTP_200_OK)

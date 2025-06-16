@@ -12,6 +12,7 @@ from authentication.models import CustomUser
 """
 class FreeLesson(models.Model):
     lesson_title = models.CharField(max_length=255, unique=True)
+    num_tasks = models.IntegerField(default=0)
 
     def __str__(self):
         return self.lesson_title
@@ -25,6 +26,7 @@ class FreeLesson(models.Model):
 """
 class PaidLesson(models.Model):
     lesson_title = models.CharField(max_length=255, unique=True)
+    num_tasks = models.IntegerField(default=0)
 
     def __str__(self):
         return self.lesson_title

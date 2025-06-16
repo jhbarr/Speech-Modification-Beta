@@ -13,7 +13,7 @@ export default function RegisterScreen() {
   const navigation = useNavigation()
 
   const register_check = () => {
-    if (password == checkPassword && (email !== null && password !== null)) {
+    if (password == checkPassword) {
       register(email, password)
     }
     else {

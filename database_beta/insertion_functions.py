@@ -2,7 +2,7 @@ import psycopg2
 import json
 
 """
-* db_commit : Commits values to the PostgreSQL database using the specified SQL code and database values
+* db_commit_lessons : Commits values to the PostgreSQL database using the specified SQL code and database values
 * 
 * INPUTS
 * conn : A database connection object
@@ -13,7 +13,7 @@ import json
 * OUPTUTS
 * None
 """
-def db_commit(conn, sql, values, many=False):
+def db_commit_lessons(conn, sql, values, many=False):
     cur = conn.cursor()
 
     try:
@@ -34,25 +34,50 @@ def db_commit(conn, sql, values, many=False):
         print("Cursor closed:", cur.closed)
 
 
-def sqlite_db_commit(conn, sql, values, many=False):
+"""
+* db_commit_tasks : Commits task values to the PostgreSQL database using the specified SQL code and database values
+* 
+* INPUTS
+* conn : A database connection object
+* sql (String) : SQL code to be exectuted
+* values (Tuple or list[tuple]) : The value(s) to be inserted into the database
+*
+* OUPTUTS
+* None
+"""
+def db_commit_tasks(conn, insert_sql, values, paid=False):
     cur = conn.cursor()
 
+    lesson_counts = {}
+
     try:
-        # Execute the SQL code
-        if not many:
-            cur.execute(sql, values)
-        else:
-            cur.executemany(sql, values)
+        for row in values:
+            lesson_id = row[0]
+            cur.execute(insert_sql, row)
+            lesson_counts[lesson_id] = lesson_counts.get(lesson_id, 0) + 1
         
-        # Commit the changes to the database
+        for lesson_id, count in lesson_counts.items():
+            if not paid:
+                cur.execute(
+                    "UPDATE api_freelesson SET num_tasks = num_tasks + %s WHERE id = %s",
+                    (count, lesson_id)
+                )
+            else:
+                cur.execute(
+                    "UPDATE api_paidlesson SET num_tasks = num_tasks + %s WHERE id = %s",
+                    (count, lesson_id)
+                )
+
         conn.commit()
 
-    except Exception as error:
-        print(error, type(error).__name__)
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error:", error)
 
     finally:
         cur.close()
-        print("Cursor closed")
+        print("Cursor closed:", cur.closed)
+
+
 
 """
 * insert_lesson : Inserts a new lesson into the PostgreSQL database
@@ -73,7 +98,7 @@ def insert_lesson(conn, values, many=False, paid=False):
     else:
        sql = """INSERT INTO api_freelesson(lesson_title) VALUES(%s)"""
     
-    db_commit(conn, sql, values, many=many)
+    db_commit_lessons(conn, sql, values, many=many)
 
 
 """
@@ -109,5 +134,5 @@ def insert_task(conn, values, many=False, paid=False):
             content = EXCLUDED.content;
         """
 
-    db_commit(conn, sql, values, many=many)
+    db_commit_tasks(conn, sql, values, paid)
 

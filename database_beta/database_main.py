@@ -16,15 +16,15 @@ if __name__ == "__main__":
     config = load_config()
     conn = connect_one(config)
    
-    lessons = None
-    lesson_names = None
-    if paid:
-        lessons = scrape.get_paid_links()[0]
-        lesson_names = lessons['lesson_names']
-    else:
-        lessons = scrape.get_free_links()
-        lesson_names = lessons['lesson_names']
-    insertion_functions.insert_lesson(conn, lesson_names, many=True, paid=paid)
+    # lessons = None
+    # lesson_names = None
+    # if paid:
+    #     lessons = scrape.get_paid_links()[0]
+    #     lesson_names = lessons['lesson_names']
+    # else:
+    #     lessons = scrape.get_free_links()
+    #     lesson_names = lessons['lesson_names']
+    # insertion_functions.insert_lesson(conn, lesson_names, many=True, paid=paid)
 
     # Grab all of the tasks from the scraping module
     result = scrape.scrape_lessons(paid=paid)

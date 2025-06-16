@@ -141,6 +141,10 @@ class SetNewPasswordSerializer(serializers.Serializer):
 * 
 * FIELDS
 *   validate() -> This validates all of the attributes
+* 
+* ADDITIONAL
+* Once the verification code is successfully used, then we want to delete is from the database. This is to reduce a buildup of stale entries
+* and to reduce the amount of storage used. 
 """
 class SetNewPasswordWithCodeSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
@@ -161,14 +165,16 @@ class SetNewPasswordWithCodeSerializer(serializers.Serializer):
 
             # Check to see if the code has expired yet
             if code_entry.is_expired():
+                code_entry.delete()
                 raise serializers.ValidationError("Verification code has expired")
-
-            code_entry.is_used = True
-            code_entry.save()
 
             # Set the new user's password and save that change to the database
             user.set_password(attrs['password'])
             user.save()
+
+            # code_entry.is_used = True
+            # code_entry.save()
+            code_entry.delete()
 
             return user
 

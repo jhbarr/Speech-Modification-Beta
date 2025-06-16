@@ -11,7 +11,21 @@ export const AuthProvider = ({ children }) => {
     const [authLoading, setAuthLoading] = useState(true)
     // Boolean value used to handle inner app control flow
     const [isAuthenticated, setIsAuthenticated] = useState(false)
+    // Used to globally keep track of the user's email
+    const [userEmail, setUserEmail] = useState(null)
 
+
+    /*
+    * testEmail -> This function tests whether a string is in a valid email format using regular expressions
+    * 
+    * FIELDS
+    *   email (String) -> A string that should be checked
+    */
+    const testEmail = (email) => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      return emailRegex.test(email)
+    }
+ 
 
     /*
     * login (async) -> This function will utilize specified email and password parameters to attempt to retrieve access and refresh
@@ -26,7 +40,7 @@ export const AuthProvider = ({ children }) => {
     */
     const login = async ( email, password ) => {
         // Check if the email and password fields were both input in valid formats
-        if (email != '' && password != '') {
+        if (testEmail(email) && password != '') {
             try {
                 // Clarify that the frontend and backend are attempting to communicate
                 setAuthLoading(true)
@@ -40,6 +54,8 @@ export const AuthProvider = ({ children }) => {
                 // If the retrieval was successful, set the user's authentication state to true
                 setIsAuthenticated(true)
                 setAuthLoading(false)
+
+                setUserEmail(email)
             } 
             catch (error) {
                 let errorMessage = "Something went wrong";
@@ -56,7 +72,7 @@ export const AuthProvider = ({ children }) => {
         }
         // Tell the user to correctly put in their email and password
         else {
-            Alert.alert("Please enter both you email and password")
+            Alert.alert("Please enter a valid email and password")
         }
     }
 
@@ -69,10 +85,13 @@ export const AuthProvider = ({ children }) => {
     * FIELDS
     *   email (String) -> The provided email of the user attempting to login
     *   password (String) -> The password of the user logging in 
+    * 
+    * ADDITIONAL
+    * This function should handle the cases where the email and password are not valid (empty or not in the right format)
     */
    const register = async ( email, password ) => {
         // Check if the email and password fields were both input in valid formats
-        if (email != null && password != null) {
+        if (testEmail(email) && password != '') {
             try {
                 // Register the user with the backend database
                 const res = await api.post('auth/register/', {email, password})
@@ -112,6 +131,8 @@ export const AuthProvider = ({ children }) => {
         await clearTokens()
         setIsAuthenticated(false)
         setAuthLoading(false)
+
+        setUserEmail(null)
     }
 
 
@@ -203,7 +224,7 @@ export const AuthProvider = ({ children }) => {
 
     // Export all of the functions and necessary variables from this context so that the children nodes can utilize them
     return (
-        <AuthContext.Provider value={{ isAuthenticated, authLoading, login, logout, register }}>
+        <AuthContext.Provider value={{ isAuthenticated, authLoading, userEmail, login, logout, register }}>
             {children}
         </AuthContext.Provider>
     )

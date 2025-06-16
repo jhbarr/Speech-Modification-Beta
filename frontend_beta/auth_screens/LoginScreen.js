@@ -11,7 +11,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const { login } = useContext(AuthContext);
   const navigation = useNavigation()
- 
+
   return (
     <View style={styles.main_container}>
       <View style={styles.titleContainer}>

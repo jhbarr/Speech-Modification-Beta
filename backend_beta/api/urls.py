@@ -15,6 +15,9 @@ urlpatterns = [
     path('paid-tasks-by-lesson/<str:lesson_title>/', views.QueryPaidTaskByLesson.as_view(), name='paid tasks by lesson'),
 
     # Routes to fetch all of the tasks and lessons completed by a specific user
-    path('free-completed-tasks/', views.UserFreeTaskCompleteView.as_view(), name='get completed free tasks'),
-    path('free-completed-lessons/<str:email>/', views.UserFreeLessonCompleteView.as_view(), name='get completed free lessons'),
+    path('free-completed-tasks/<str:email>/', views.GetUserFreeTaskCompleteView.as_view(), name='get completed free tasks'),
+    path('free-completed-lessons/<str:email>/', views.GetUserFreeLessonCompleteView.as_view(), name='get completed free lessons'),
+
+    # Routes to mark a task or lesson as complete
+    path('mark-completed-lessons/', views.MarkUserCompletedTaskView.as_view(), name='mark completed free lessons'),
 ]

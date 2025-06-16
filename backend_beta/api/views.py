@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from .permissions import IsPayingUser
 from .models import FreeLesson, PaidLesson, FreeTask, PaidTask, UserCompletedFreeTasks, UserCompletedFreeLessons
-from .serializers import FreeLessonSerializer, PaidLessonSerializer, FreeTaskSerializer, PaidTaskSerializer, CompletedFreeTaskSerializer, CompletedFreeLessonSerializer
+from .serializers import FreeLessonSerializer, PaidLessonSerializer, FreeTaskSerializer, PaidTaskSerializer, MarkCompletedFreeTaskSerializer, GetCompletedTaskSerializer, CompletedFreeLessonSerializer
 
 from authentication.models import CustomUser
 
@@ -125,35 +125,16 @@ class QueryPaidTaskByLesson(generics.ListAPIView):
 
 # ***** COMPLETE TASK AND LESSON VIEWS *****
 """
-* UserFreeTaskCompleteView -> This view is used to to mark a specific task as completed by a specific user. If the user has completed all of the other tasks
-*   that are part of a particular lesson, then the serializer will automatically mark that lesson as completed
+* PostUserCompletedTaskView -> This view will be responsible for marking a specific task as completed by a specific user.
+*   Additionally, the serializer will handle creating a completed lesson entry based on if all tasks in a lesson are completed
 * 
-* FIELDS
+* FIELDS 
 *   serializer_class -> This specifies that the CompletedFreeTaskSerializer should be used to serialize and deserialize database object instances
 *   permissions_classes -> This should be IsAuthenticated since any user should be able to register
-* 
-* ADDITIONAL 
-* This has specific and unique post and get behavior. A user will request all of the tasks completed by a user with a specified email
-* While when a user completes a task, they need to provide both the email and the name of the task that they are completing
 """
-class UserFreeTaskCompleteView(generics.GenericAPIView):
-    serializer_class = CompletedFreeTaskSerializer
+class MarkUserCompletedTaskView(generics.GenericAPIView):
+    serializer_class = MarkCompletedFreeTaskSerializer
     permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        email = request.data['email']
-        try:
-            user = CustomUser.objects.get(email__iexact=email)
-        except CustomUser.DoesNotExist:
-            return Response({'error': 'User not found with that email'}, status=status.HTTP_404_NOT_FOUND)
-
-        tasks = UserCompletedFreeTasks.objects.filter(
-            user=user
-        ).values_list('task__task_title', flat=True)
-
-        return Response({"data" : tasks}, status=status.HTTP_200_OK)
-        
-
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -163,9 +144,31 @@ class UserFreeTaskCompleteView(generics.GenericAPIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
+"""
+* GetUserFreeTaskCompleteView -> This view is used to to mark a specific task as completed by a specific user. If the user has completed all of the other tasks
+*   that are part of a particular lesson, then the serializer will automatically mark that lesson as completed
+* 
+* FIELDS
+*   serializer_class -> This specifies that the CompletedFreeTaskSerializer should be used to serialize and deserialize database object instances
+*   permissions_classes -> This should be IsAuthenticated since any user should be able to register
+*   get_queryset -> This will retrieve all of the tasks completed by the user with the specified email
+* 
+* ADDITIONAL 
+* This has specific and unique post and get behavior. A user will request all of the tasks completed by a user with a specified email
+* While when a user completes a task, they need to provide both the email and the name of the task that they are completing
+"""
+class GetUserFreeTaskCompleteView(generics.ListAPIView):
+    serializer_class = GetCompletedTaskSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        email = self.kwargs.get('email')
+
+        user = get_object_or_404(CustomUser, email__iexact=email)
+        return UserCompletedFreeTasks.objects.filter(user=user)
 
 """
-* UserFreeLessonCompleteView -> This view is used to query all of the lessons that a specific user has completed. But it does not mark any lessons as completed
+* GetUserFreeLessonCompleteView -> This view is used to query all of the lessons that a specific user has completed. But it does not mark any lessons as completed
 *   that is done by the CompletedFreeTaskSerializer
 * 
 * FIELDS 
@@ -173,7 +176,7 @@ class UserFreeTaskCompleteView(generics.GenericAPIView):
 *   serializer_class -> This will be used to serialize and deserialize a UserCompletedFreeLessons object instance
 *   permission_classes -> This should be IsAuthenticated so that it can only be retrieved by a user that has logged in
 """
-class UserFreeLessonCompleteView(generics.ListAPIView):
+class GetUserFreeLessonCompleteView(generics.ListAPIView):
     serializer_class = CompletedFreeLessonSerializer
     permission_classes = [IsAuthenticated]
 
