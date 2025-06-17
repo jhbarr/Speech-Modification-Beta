@@ -3,6 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 
+import InsideNavigator from './InsideNavigator';
+
 import { AuthContext } from '../context/AuthContext';
 
 import LoginScreen from '../auth_screens/LoginScreen';
@@ -41,12 +43,7 @@ export default function AppNavigator() {
                 */}
                 {isAuthenticated ? 
                 (
-                    <Stack.Screen name='home' component={HomeScreen}/>
-                    // <Stack.Screen 
-                    //     name='home' 
-                    //     component={InsideNavigator}
-                    //     options={{ headerShown: false }}
-                    // />
+                    <Stack.Screen name='inside screens' component={InsideNavigator}/>
                 ) : (
                     <>
                     <Stack.Screen name='login' component={LoginScreen}/>

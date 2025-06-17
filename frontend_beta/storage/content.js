@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from "react-native";
 
 /*
@@ -15,7 +15,7 @@ import { Alert } from "react-native";
 export async function saveBatchQueue( task_title ) {
     try{
         // Try to retrieve the task batch queue from async storage
-        const value = await SecureStore.getItemAsync("batchQueue")
+        const value = await AsyncStorage.getItem("batchQueue")
         let updatedList = JSON.parse(value)
 
         if (value != null) {
@@ -33,7 +33,7 @@ export async function saveBatchQueue( task_title ) {
             updatedList = [task_title];
         }   
 
-        await SecureStore.setItemAsync("batchQueue", JSON.stringify(updatedList));
+        await AsyncStorage.setItem("batchQueue", JSON.stringify(updatedList));
         console.log("Batch queue updated successfully");
     }
     catch (error) {
@@ -63,7 +63,7 @@ export async function saveBatchQueue( task_title ) {
 */
 export async function getBatchQueue() {
     try {
-        return await SecureStore.getItemAsync('batchQueue');
+        return await AsyncStorage.getItem('batchQueue');
     } catch (error) {
         console.log('Error retrieving batch queue tasks', error)
     }
@@ -82,7 +82,7 @@ export async function getBatchQueue() {
 * This function should be used when the batch queue is synced with the backend
 */
 export async function clearBatchQueue() {
-    await SecureStore.deleteItemAsync('batchQueue');
+    await AsyncStorage.removeItem('batchQueue');
 }
 
 
@@ -99,7 +99,7 @@ export async function clearBatchQueue() {
 */
 export async function saveFreeLessons(freeLessons){ 
     try {
-        await SecureStore.setItem('freeLessons', JSON.stringify(freeLessons));
+        await AsyncStorage.setItem('freeLessons', JSON.stringify(freeLessons));
     } catch (error) {
         console.log('Error storing lessons', error)
     }
@@ -114,7 +114,7 @@ export async function saveFreeLessons(freeLessons){
 */
 export async function getFreeLessons() {
     try {
-        return await SecureStore.getItemAsync('freeLessons');
+        return await AsyncStorage.getItem('freeLessons');
     } catch (error) {
         console.log('Error retrieving free lessons', error)
     }

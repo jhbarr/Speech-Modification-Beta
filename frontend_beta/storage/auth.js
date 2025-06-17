@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /*
 * saveTokens (async) -> This function saves both a specified refresh and access token to expo's secure storeage so that they can be accessed 
@@ -77,7 +78,7 @@ export async function clearTokens() {
     await SecureStore.deleteItemAsync('userEmail')
 
     // This clears the lessons from the content storage portion of the async storage
-    await SecureStore.deleteItemAsync('freeLessons')
+    await AsyncStorage.removeItem('freeLessons')
 }
 
 /*

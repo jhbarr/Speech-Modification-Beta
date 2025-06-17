@@ -1,4 +1,4 @@
-import { createContext, useEffect, useContext, useState } from 'react';
+import { createContext, useEffect, useContext, useState, useRef } from 'react';
 import { Alert, AppState } from 'react-native';
 
 import api from '../utils/api'
@@ -15,12 +15,18 @@ ONE WAY TO SPEED UP API CALLS
 
 export const ContentProvider = ({ children }) => {
     // The global user email kept by the AuthContext
-    const { userEmail } = useContext(AuthContext); // NEED TO PERSISTENTLY STORE THEIR EMAIL
+    const { userEmail, isAuthenticated } = useContext(AuthContext); // NEED TO PERSISTENTLY STORE THEIR EMAIL
 
     // Global list of lessons
     const [freeLessons, setFreeLessons] = useState([])
     // Global list of tasks
-    const [freeTasks, setFreeTasks] = useState([])
+    const [freeTasks, setFreeTasks] = useState({})
+
+    // These state variables will be used to handle keeping track of time and app state
+    // This is so that the batch api calls can be sent out regularly
+    const [appState, setAppState] = useState(AppState.currentState);
+    const appStateRef = useRef(AppState.currentState);
+    const intervalRef = useRef(null);
 
     /*
     * getFreeLessons (async) -> This function will retrieve all of the free lessons available to the logged in user
@@ -53,11 +59,15 @@ export const ContentProvider = ({ children }) => {
                 is_completed: completed_lessons.has(lesson.id)
             }))
             
+            // Sort the lessons by id number
+            // ** For some reason they come out a little jumbled in the API call
+            updatedLessons.sort((a, b) => a.id - b.id)
+            
             // // Update the global state with the retrieved lessons
             setFreeLessons(updatedLessons)
 
-            // // Also update the lesson data in persistent storage
-            // saveFreeLessons(all_lessons)
+            // Also update the lesson data in persistent storage
+            saveFreeLessons(updatedLessons)
             console.log(updatedLessons)
 
         }
@@ -88,36 +98,49 @@ export const ContentProvider = ({ children }) => {
     * Similarly to the getFreeLessons() method, we are aggregating which tasks have been completed by the user too
     */
     const getFreeTasksByLesson = async (lesson_id) => {
-        try {
-            const res_all = await api.get(`api/free-tasks-by-lesson/${lesson_id}/`)
-            const res_completed = await api.get(`api/free-completed-tasks/${userEmail}/`)
 
-            // Get the actual data
-            // Additionally, aggregate all of the completed task titles into a list
-            const all_tasks = res_all.data
-            const completed_tasks = new Set(res_completed.data.map(item => item.task_id))
-           
-            // Give each lesson a property called 'is_completed'
-            // This is determined by whether the tasks's id was returned by the free-completed-tasks call 
-            const updated_tasks = all_tasks.map(task => ({
-                ...task,
-                is_completed: completed_tasks.has(task.id)
-            }))
+        // Check if the the tasks from this lesson have already been fetched
+        if (!(lesson_id in freeTasks)){
+            try {
+                const res_all = await api.get(`api/free-tasks-by-lesson/${lesson_id}/`)
+                const res_completed = await api.get(`api/free-completed-tasks/${userEmail}/`)
 
-            setFreeTasks(updated_tasks)
-            console.log(updated_tasks)
-        }
-        // Handle any errors gracefully
-        catch (error) {
-            let errorMessage = "Something went wrong";
-
-            if (error.response && error.response.data && error.response.data.error) {
-                errorMessage = error.response.data.error;
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
+                // Get the actual data
+                // Additionally, aggregate all of the completed task titles into a list
+                const all_tasks = res_all.data
+                const completed_tasks = new Set(res_completed.data.map(item => item.task_id))
             
-            Alert.alert("Error loading free tasks", errorMessage);
+                // Give each lesson a property called 'is_completed'
+                // This is determined by whether the tasks's id was returned by the free-completed-tasks call 
+                const updated_tasks = all_tasks.map(task => ({
+                    ...task,
+                    is_completed: completed_tasks.has(task.id)
+                }))
+
+                // Update the free tasks setting the current lesson_id to its respective tasks
+                // ** NOTE ** To use a variable name as a key, you must put brackets around it
+                setFreeTasks(prevData => ({
+                    ...prevData,
+                    [lesson_id]: updated_tasks
+                }))
+                console.log(updated_tasks)
+                
+            }
+            // Handle any errors gracefully
+            catch (error) {
+                let errorMessage = "Something went wrong";
+
+                if (error.response && error.response.data && error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                Alert.alert("Error loading free tasks", errorMessage);
+            }
+        } 
+        else {
+            console.log(freeTasks[lesson_id])
         }
     }
 
@@ -140,14 +163,18 @@ export const ContentProvider = ({ children }) => {
 
         try {
             // Mark the task as complete locally
-            const updatedTasks = freeTasks.map(task =>
+            console.log(freeTasks, typeof(lesson_id))
+            const updatedTasks = freeTasks[lesson_id].map(task =>
             task.id === task_id
                 ? { ...task, is_completed: true }
                 : task
             )
 
             // Update the global state variable
-            setFreeTasks(updatedTasks)
+            setFreeTasks(prevData => ({
+                ...prevData,
+                [lesson_id]: updatedTasks
+            }))
             console.log("completed task", task_id)
 
 
@@ -277,15 +304,16 @@ export const ContentProvider = ({ children }) => {
     const freeLessonLoadInit = async () => {
         try {
             // 1. Check if lessons are stored in Async Storage
-            const freeLessons =  JSON.parse(await getFreeLessons())
-            if (freeLessons != null) {
-                setFreeLessons(freeLessons)
+            // const freeLessons =  JSON.parse(await getFreeLessons())
+            // if (freeLessons != null) {
+            //     setFreeLessons(freeLessons)
 
-            // Otherwise retrieve the lessons from the backend and store them
-            // retrieveFreeLessons will store them both locally in state variables and in persistent storage
-            } else {
-                retrieveFreeLessons()
-            }
+            // // Otherwise retrieve the lessons from the backend and store them
+            // // retrieveFreeLessons will store them both locally in state variables and in persistent storage
+            // } else {
+            //     retrieveFreeLessons()
+            // }
+            retrieveFreeLessons()
 
         } catch (error) {
             let errorMessage = "Something went wrong";
@@ -301,8 +329,54 @@ export const ContentProvider = ({ children }) => {
     }
 
 
-        return (
-        <ContentContext.Provider value={{ retrieveFreeLessons, getFreeTasksByLesson, completeFreeTask, syncCompletedTasks, freeLessonLoadInit }}>
+    /*
+    * This useEffect will be in charge of executing the batch task API calls to the backend.
+    * This will occur both every X amount of time and when the user resumes using the app after it has gone
+    * stale. 
+    * We don't need to check if there is anything to batch, because the syncCompletedTasks() method will
+    * do so for us
+    */
+    useEffect(() => {
+        if (isAuthenticated === true) {
+            syncCompletedTasks()
+
+            // Set interval for running every X seconds (e.g., 30 sec)
+            intervalRef.current = setInterval(syncCompletedTasks(), 30000);
+            
+            // Handle app resume
+            // This sets up a listener for changes in the app state
+            // the nextAppState is the new state that the app is entering
+            const subscription = AppState.addEventListener("change", nextAppState => {
+
+                // This checks if the app WAS running in the background but has 
+                // now become active
+                if (
+                    appStateRef.current.match(/inactive|background/) &&
+                    nextAppState === "active"
+                ) {
+                    // If the app HAS become active, we want to run our code
+                    console.log("App has come to the foreground!");
+                    syncCompletedTasks();
+                }
+                // This stores the current app state
+                appStateRef.current = nextAppState;
+                setAppState(nextAppState);
+            });
+
+            // Clean up
+            // This code runs when the component unmounts
+            // So in this case, that would just be when the app is entirely closed
+            return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            subscription.remove();
+    };
+        }
+    }, [])
+
+
+
+    return (
+        <ContentContext.Provider value={{ retrieveFreeLessons, getFreeTasksByLesson, completeFreeTask, syncCompletedTasks, freeLessonLoadInit, freeLessons, freeTasks }}>
             {children}
         </ContentContext.Provider>
     )
