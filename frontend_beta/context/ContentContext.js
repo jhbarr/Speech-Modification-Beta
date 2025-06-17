@@ -3,8 +3,15 @@ import { Alert, AppState } from 'react-native';
 
 import api from '../utils/api'
 import { AuthContext } from '../context/AuthContext';
+import { getBatchQueue, saveBatchQueue, clearBatchQueue, saveFreeLessons, getFreeLessons} from '../storage/content';
 
 export const ContentContext = createContext()
+
+/*
+ONE WAY TO SPEED UP API CALLS
+    - Would be to query the lessons and tasks by their id's rather than their titles. This would save time both on comparisons
+    and by allowing the backend to just send back the ids and not have to retrieve the titles in the first place
+*/
 
 export const ContentProvider = ({ children }) => {
     // The global user email kept by the AuthContext
@@ -27,7 +34,7 @@ export const ContentProvider = ({ children }) => {
     * It should be periodically synced with the data in the backend so that there is consistency across 
     * the whole application
     */
-    const getFreeLessons = async () => {
+    const retrieveFreeLessons = async () => {
         try {
             // Retrieve all of the free lessons in the database
             // Also retrieve all of the free lessons that the user has completed
@@ -36,22 +43,22 @@ export const ContentProvider = ({ children }) => {
             
             // Get the actual data
             // Additionally, aggregate all of the completed lesson titles into a list
-            const all_lessons = res_all.data
-            const completed_lessons = res_completed.data.map(item => item.lesson_title)
+            const all_lessons = res_all.data // -> List of objects
+            const completed_lessons = new Set(res_completed.data.map(item => item.lesson_id)) // -> List of objects
            
-            // For each lesson, check whether it has been completed and mark it accordingly
-            for (let i = 0; i < all_lessons.length; i++) {
-                const current = all_lessons[i];
+            // Give each lesson a property called 'is_completed'
+            // This is determined by whether the lesson's id was returned by the free-completed-lessons call
+            const updatedLessons = all_lessons.map(lesson => ({
+                ...lesson,
+                is_completed: completed_lessons.has(lesson.id)
+            }))
+            
+            // // Update the global state with the retrieved lessons
+            setFreeLessons(updatedLessons)
 
-                if (completed_lessons.includes(current.lesson_title)) {
-                    current.is_completed = true
-                }
-                else {
-                    current.is_completed = false
-                }
-            }
-
-            setFreeLessons(all_lessons)
+            // // Also update the lesson data in persistent storage
+            // saveFreeLessons(all_lessons)
+            console.log(updatedLessons)
 
         }
         // Throw an error alert if anything goes wrong
@@ -80,30 +87,25 @@ export const ContentProvider = ({ children }) => {
     * ADDITIONAL
     * Similarly to the getFreeLessons() method, we are aggregating which tasks have been completed by the user too
     */
-    const getFreeTasksByLesson = async (lesson) => {
+    const getFreeTasksByLesson = async (lesson_id) => {
         try {
-            const res_all = await api.get(`api/free-tasks-by-lesson/${lesson}/`)
+            const res_all = await api.get(`api/free-tasks-by-lesson/${lesson_id}/`)
             const res_completed = await api.get(`api/free-completed-tasks/${userEmail}/`)
 
             // Get the actual data
             // Additionally, aggregate all of the completed task titles into a list
             const all_tasks = res_all.data
-            const completed_tasks = res_completed.data.map(item => item.lesson_title)
+            const completed_tasks = new Set(res_completed.data.map(item => item.task_id))
            
-            // For each task, check whether it has been completed and mark it accordingly
-            for (let i = 0; i < all_tasks.length; i++) {
-                const current = all_tasks[i];
-                
-                // if the task has been completed, mark it as so
-                if (completed_tasks.includes(current.lesson_title)) {
-                    current.is_completed = true
-                }
-                else {
-                    current.is_completed = false
-                }
-            }
+            // Give each lesson a property called 'is_completed'
+            // This is determined by whether the tasks's id was returned by the free-completed-tasks call 
+            const updated_tasks = all_tasks.map(task => ({
+                ...task,
+                is_completed: completed_tasks.has(task.id)
+            }))
 
-            setFreeTasks(freeTasks + all_tasks)
+            setFreeTasks(updated_tasks)
+            console.log(updated_tasks)
         }
         // Handle any errors gracefully
         catch (error) {
@@ -133,40 +135,174 @@ export const ContentProvider = ({ children }) => {
     * Only the completed tasks need to be added to the backend batch because the backend will handle marking lessons 
     * as completed
     */
-    const completeFreeTask = (lesson_title, task_title) => {
-        // Add the task to the batch queue
-        // IMPLEMENT LATER
+    const completeFreeTask = async (lesson_id, task_id) => {
+        console.log("\n\nExecuting completeFreeTask")
 
-        // Mark the task as complete locally
-        const updatedTasks = freeTasks.map(task =>
-        task.task_title === task_title
-            ? { ...task, completed: true }
-            : task
-        )
-        // Update the global state variable
-        setFreeTasks(updatedTasks)
-
-        // Now check if all of the tasks belonging to the lesson have been completed
-        const task_by_lesson = freeTasks.filter(item => item.task_title === task_title)
-        const num_completed = task_by_lesson.length
-
-        const lesson = freeTasks.filter(item => item.lesson_title === lesson_title)
-        if (lesson.num_tasks == num_completed) {
-            const updatedLessons = freeLessons.map(lesson => 
-                lesson.lesson_title === lesson_title
-                ? { ...lesson, completed: true}
-                : lesson
+        try {
+            // Mark the task as complete locally
+            const updatedTasks = freeTasks.map(task =>
+            task.id === task_id
+                ? { ...task, is_completed: true }
+                : task
             )
 
-            setFreeLessons(updatedLessons)
-        }
+            // Update the global state variable
+            setFreeTasks(updatedTasks)
+            console.log("completed task", task_id)
 
+
+            // Now check if all of the tasks belonging to the lesson have been completed
+            // We have to use updatedTasks and not the state variable freeTasks because at this point, the state variable
+            // Hasn't updated yet
+            const task_by_lesson = updatedTasks.filter(item => item.lesson === lesson_id && item.is_completed === true)
+            const num_completed = task_by_lesson.length
+            
+            // Check if all of the tasks belonging to the specific lesson have been completed
+            // First find the lesson with the match id
+            const lesson = freeLessons.find(item => item.id === lesson_id)
+
+            // If the length of the lesson tasks completed is equal to the number of tasks in the lesson
+            // that means that the lesson itself is also complete
+            if (lesson.num_tasks === num_completed) {
+                const updatedLessons = freeLessons.map(lesson => 
+                    lesson.id === lesson_id
+                    ? { ...lesson, is_completed: true}
+                    : lesson
+                )
+
+                setFreeLessons(updatedLessons)
+                console.log("Completed lesson", lesson_id)
+            }
+            
+            // Add the task to the batch queue
+            await saveBatchQueue(task_id)
+        }
+        catch (error) {
+            let errorMessage = "Something went wrong";
+
+            if (error.response && error.response.data && error.response.data.error) {
+                errorMessage = error.response.data.error;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            Alert.alert("Error with completing the lessons", errorMessage);
+    
+        }
 
     }
 
 
+
+    /*
+    * syncCompletedTasks (async) -> This function will send all of the completed tasks in a batch to the backend so that 
+    *   they can be marked as completed serverside. 
+    * 
+    * FIELDS 
+    *   email (String) -> The email of the current user
+    * 
+    * ADDITIONAL
+    * This function will also take the completed tasks and lessons returned by the backend to double check that all of the
+    * completed tasks are marked as so on the frontend side. 
+    */
+    const syncCompletedTasks = async () => {
+        console.log("\n\nExecuting syncCompletedTasks")
+
+        const batch_queue = JSON.parse(await getBatchQueue())
+        console.log("Current batch queue", batch_queue)
+        
+        // Don't do anything if there is nothing in the batch queue
+        if (batch_queue.length == 0) return
+
+        try {
+
+            const res = await api.post('api/mark-completed-lessons/', { email: userEmail, task_ids: batch_queue })
+
+            // Handle lesson completions
+            const { newly_completed_tasks, newly_completed_lessons } = res.data;
+            console.log("Response", newly_completed_tasks, newly_completed_lessons)
+            
+            // Check that the completed tasks and lessons are reflected correctly on the frontend
+            // Find the task with the matching task title and check that it is complete on the frontend too
+            newly_completed_tasks.forEach(function(item) { 
+                const task = freeTasks.find(element => element.id === item)
+                
+                // If there is a mismatch between the frontend and the backend, mark the frontend task as complete
+                // *** FOR NOW *** throw an error for debugging purposes
+                if (task.is_completed !== true) {
+                    Alert.alert("There was a mismatch between frontend and backend (with tasks)")
+                }
+            })
+
+            // For the completed lessons as well. Check that the frontend and the backend match with respect to completion flags
+            newly_completed_lessons.forEach(function(item) { 
+                const lesson = freeLessons.find(element => element.id === item)
+
+                if (lesson.is_completed !== true) {
+                    Alert.alert("There was a mismatch between frontend and backend (with lessons)")
+                }
+            })
+
+
+            // Clear the batch queue in async storage now that they are correcly synced
+            await clearBatchQueue()
+            console.log("Sync was successful")
+        }
+        catch (error) {
+            let errorMessage = "Something went wrong";
+
+            if (error.response && error.response.data && error.response.data.error) {
+                errorMessage = error.response.data.error;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            Alert.alert("Error sending batch tasks to backend", errorMessage);
+        }
+    }
+
+
+
+    /*
+    * freeLessonLoadInit (async) -> This function will load all of the free lessons from the backend and store them in the global
+    *   state variable
+    * 
+    * FIELDS 
+    *   none
+    * 
+    * ADDITIONAL
+    * This funciton should be called when the Home page is initially mounted so that api references can have access to the different 
+    * lesson titles. 
+    */
+    const freeLessonLoadInit = async () => {
+        try {
+            // 1. Check if lessons are stored in Async Storage
+            const freeLessons =  JSON.parse(await getFreeLessons())
+            if (freeLessons != null) {
+                setFreeLessons(freeLessons)
+
+            // Otherwise retrieve the lessons from the backend and store them
+            // retrieveFreeLessons will store them both locally in state variables and in persistent storage
+            } else {
+                retrieveFreeLessons()
+            }
+
+        } catch (error) {
+            let errorMessage = "Something went wrong";
+
+            if (error.response && error.response.data && error.response.data.error) {
+                errorMessage = error.response.data.error;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            Alert.alert("Error initializing free lessons from backend", errorMessage);
+        }
+    }
+
+
         return (
-        <ContentContext.Provider value={{ getFreeLessons, getFreeTasksByLesson }}>
+        <ContentContext.Provider value={{ retrieveFreeLessons, getFreeTasksByLesson, completeFreeTask, syncCompletedTasks, freeLessonLoadInit }}>
             {children}
         </ContentContext.Provider>
     )

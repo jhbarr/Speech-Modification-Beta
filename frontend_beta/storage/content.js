@@ -1,5 +1,4 @@
-import * as SecureStore from "@react-native-async-storage/async-storage";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from 'expo-secure-store'
 import { Alert } from "react-native";
 
 /*
@@ -15,7 +14,9 @@ import { Alert } from "react-native";
 */
 export async function saveBatchQueue( task_title ) {
     try{
-        const value = SecureStore.getItem("batchQueue")
+        // Try to retrieve the task batch queue from async storage
+        const value = await SecureStore.getItemAsync("batchQueue")
+        let updatedList = JSON.parse(value)
 
         if (value != null) {
             // Key exists — parse and append
@@ -32,17 +33,58 @@ export async function saveBatchQueue( task_title ) {
             updatedList = [task_title];
         }   
 
-        await AsyncStorage.setItem("batchQueue", JSON.stringify(updatedList));
-        console.log("List updated successfully");
+        await SecureStore.setItemAsync("batchQueue", JSON.stringify(updatedList));
+        console.log("Batch queue updated successfully");
     }
     catch (error) {
-        Alert.alert("Error updating batch queue", error);
+        let errorMessage = "Something went wrong";
+
+            if (error.response && error.response.data && error.response.data.error) {
+                errorMessage = error.response.data.error;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            Alert.alert("Error saving batch queue", errorMessage);
     }
 }
 
+
+
 /*
-* saveFreeTasks ?
+* getBatchQueue (async) -> Retrieve the task batch queue from the async storage so that it can be sent to the backend
+*   for processing
+* 
+* FIELDS 
+*   none
+* 
+* ADDITIONAL
+* This function should simply return a list with all of the tasks that have been completed over the past x amount of time
 */
+export async function getBatchQueue() {
+    try {
+        return await SecureStore.getItemAsync('batchQueue');
+    } catch (error) {
+        console.log('Error retrieving batch queue tasks', error)
+    }
+}
+
+
+
+
+/*
+* clearBatchQueue (async) -> This function will clear all of the completed tasks from the batch queue in async storage
+* 
+* FIELDS 
+*   none
+*
+* ADDITIONAL
+* This function should be used when the batch queue is synced with the backend
+*/
+export async function clearBatchQueue() {
+    await SecureStore.deleteItemAsync('batchQueue');
+}
+
 
 /*
 * saveFreeLessons -> This function saves a list of free lessons to react natives async storage (frontend)
@@ -62,3 +104,18 @@ export async function saveFreeLessons(freeLessons){
         console.log('Error storing lessons', error)
     }
 }  
+
+
+/*
+* getFreeLessons (async) -> Retrieve the free lessons from async storage
+* 
+* FIELDS
+*   none
+*/
+export async function getFreeLessons() {
+    try {
+        return await SecureStore.getItemAsync('freeLessons');
+    } catch (error) {
+        console.log('Error retrieving free lessons', error)
+    }
+}

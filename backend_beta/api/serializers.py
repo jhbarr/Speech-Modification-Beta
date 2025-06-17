@@ -102,13 +102,13 @@ class MarkCompletedFreeTaskSerializer(serializers.Serializer):
     # These are the fields of the serializer, typically under the meta class
     # They are validated automatically and put into the attrs dictionary which is passed to validate()
     email = serializers.CharField()
-    task_titles = serializers.ListField(child=serializers.CharField())
+    task_ids = serializers.ListField(child=serializers.IntegerField())
 
     def validate(self, attrs):
         try:
             # Validate that the user and task exist based on the email and task_title respectively
             user = CustomUser.objects.get(email=attrs['email'])
-            tasks = FreeTask.objects.filter(task_title__in=attrs['task_titles'])
+            tasks = FreeTask.objects.filter(id__in=attrs['task_ids'])
 
             attrs['user'] = user
             attrs['tasks'] = tasks
@@ -130,8 +130,7 @@ class MarkCompletedFreeTaskSerializer(serializers.Serializer):
             # Create a new table entry with the specific user and task
             try:
                 UserCompletedFreeTasks.objects.create(user=user, task=task)
-                newly_completed_tasks.append(task.task_title)
-                print(newly_completed_tasks)
+                newly_completed_tasks.append(task.id)
             # User has already completed the task
             except IntegrityError:
                 continue
@@ -141,9 +140,6 @@ class MarkCompletedFreeTaskSerializer(serializers.Serializer):
             lesson = task.lesson
             if lesson.id in completed_lessons:
                 continue
-                
-            # Add this as a completed lesson so that we knowo if for future tasks
-            completed_lessons.add(lesson.id)
 
             # Get the number of tasks belonging to a specific lesson
             # Get all of the completed tasks beloning to the lesson and the user
@@ -155,8 +151,10 @@ class MarkCompletedFreeTaskSerializer(serializers.Serializer):
             if len(completed_tasks) == lesson_num_tasks:
                 try:
                     UserCompletedFreeLessons.objects.create(user=user, lesson=lesson)
-                    newly_completed_lessons.append(lesson.lesson_title)
-                    print(newly_completed_lessons)
+                    newly_completed_lessons.append(lesson.id)
+
+                    # Add this as a completed lesson so that we know if for future tasks
+                    completed_lessons.add(lesson.id)
                 except IntegrityError:
                     pass
 
@@ -174,11 +172,10 @@ class MarkCompletedFreeTaskSerializer(serializers.Serializer):
 *   lesson -> The FreeTask that has been completed
 """
 class GetCompletedTaskSerializer(serializers.ModelSerializer):
-    task_title = serializers.CharField(source='task.task_title', read_only=True)
 
     class Meta:
         model = UserCompletedFreeTasks
-        fields = ['task_title']
+        fields = ['task_id']
 
 """
 * CompletedFreeLessonSerializer -> This is used to serialize and deserialize the UserCompletedFreeLesson object
@@ -188,8 +185,7 @@ class GetCompletedTaskSerializer(serializers.ModelSerializer):
 *   lesson -> The FreeLesson that has been completed
 """
 class CompletedFreeLessonSerializer(serializers.ModelSerializer):
-    lesson_title = serializers.CharField(source='lesson.lesson_title', read_only=True)
 
     class Meta:
         model = UserCompletedFreeLessons
-        fields = ['lesson_title']
+        fields = ['lesson_id']

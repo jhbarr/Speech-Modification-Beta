@@ -96,8 +96,8 @@ class QueryFreeTaskByLesson(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        lesson_title = self.kwargs.get('lesson_title')
-        lesson = get_object_or_404(FreeLesson, lesson_title__iexact=lesson_title)
+        lesson_id = self.kwargs.get('lesson_id')
+        lesson = get_object_or_404(FreeLesson, id=lesson_id)
         return FreeTask.objects.filter(lesson=lesson)
 
 """
@@ -117,8 +117,8 @@ class QueryPaidTaskByLesson(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsPayingUser]
 
     def get_queryset(self):
-        lesson_title = self.kwargs.get('lesson_title')
-        lesson = get_object_or_404(PaidLesson, lesson_title__iexact=lesson_title)
+        lesson_id = self.kwargs.get('lesson_id')
+        lesson = get_object_or_404(PaidLesson, id=lesson_id)
         return PaidTask.objects.filter(lesson=lesson)
 
 

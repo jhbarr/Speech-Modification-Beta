@@ -75,6 +75,9 @@ export async function clearTokens() {
     await SecureStore.deleteItemAsync('accessExpiry');
 
     await SecureStore.deleteItemAsync('userEmail')
+
+    // This clears the lessons from the content storage portion of the async storage
+    await SecureStore.deleteItemAsync('freeLessons')
 }
 
 /*
