@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 import api from '../utils/api';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function PasswordConfirmationScreen() {
     const [password, setPassword] = useState('');
@@ -44,6 +45,10 @@ export default function PasswordConfirmationScreen() {
     }   
 
     return (
+        <LinearGradient
+            colors={["#2A1AD8", "#7231EC"]}
+            style={styles.background}
+        >
         <SafeAreaView style={styles.main_container}>
             <TouchableOpacity
                 onPress={() => navigation.goBack()}
@@ -99,10 +104,14 @@ export default function PasswordConfirmationScreen() {
         </View>
 
         </SafeAreaView>
+        </LinearGradient>
     )
 }
 
 const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+    },  
     main_container: {
         flex: 1,
         backgroundColor: '#00B0FC'
@@ -149,7 +158,7 @@ const styles = StyleSheet.create({
     button: {
         width: '100%',
         height: 50,
-        backgroundColor: '#1E90FF',
+        backgroundColor: '#2A1AD8',
         borderRadius: 20,
 
         justifyContent: 'center',

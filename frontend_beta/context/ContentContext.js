@@ -68,7 +68,7 @@ export const ContentProvider = ({ children }) => {
 
             // Also update the lesson data in persistent storage
             saveFreeLessons(updatedLessons)
-            console.log(updatedLessons)
+            // console.log(updatedLessons)
 
         }
         // Throw an error alert if anything goes wrong
@@ -123,7 +123,7 @@ export const ContentProvider = ({ children }) => {
                     ...prevData,
                     [lesson_id]: updated_tasks
                 }))
-                console.log(updated_tasks)
+                // console.log(updated_tasks)
                 
             }
             // Handle any errors gracefully
@@ -304,17 +304,15 @@ export const ContentProvider = ({ children }) => {
     const freeLessonLoadInit = async () => {
         try {
             // 1. Check if lessons are stored in Async Storage
-            // const freeLessons =  JSON.parse(await getFreeLessons())
-            // if (freeLessons != null) {
-            //     setFreeLessons(freeLessons)
+            const freeLessons =  JSON.parse(await getFreeLessons())
+            if (freeLessons != null) {
+                setFreeLessons(freeLessons)
 
-            // // Otherwise retrieve the lessons from the backend and store them
-            // // retrieveFreeLessons will store them both locally in state variables and in persistent storage
-            // } else {
-            //     retrieveFreeLessons()
-            // }
-            retrieveFreeLessons()
-
+            // Otherwise retrieve the lessons from the backend and store them
+            // retrieveFreeLessons will store them both locally in state variables and in persistent storage
+            } else {
+                retrieveFreeLessons()
+            }
         } catch (error) {
             let errorMessage = "Something went wrong";
 
@@ -336,42 +334,42 @@ export const ContentProvider = ({ children }) => {
     * We don't need to check if there is anything to batch, because the syncCompletedTasks() method will
     * do so for us
     */
-    useEffect(() => {
-        if (isAuthenticated === true) {
-            syncCompletedTasks()
+    // useEffect(() => {
+    //     if (isAuthenticated === true) {
+    //         syncCompletedTasks()
 
-            // Set interval for running every X seconds (e.g., 30 sec)
-            intervalRef.current = setInterval(syncCompletedTasks(), 30000);
+    //         // Set interval for running every X seconds (e.g., 30 sec)
+    //         intervalRef.current = setInterval(syncCompletedTasks, 30000);
             
-            // Handle app resume
-            // This sets up a listener for changes in the app state
-            // the nextAppState is the new state that the app is entering
-            const subscription = AppState.addEventListener("change", nextAppState => {
+    //         // Handle app resume
+    //         // This sets up a listener for changes in the app state
+    //         // the nextAppState is the new state that the app is entering
+    //         const subscription = AppState.addEventListener("change", nextAppState => {
 
-                // This checks if the app WAS running in the background but has 
-                // now become active
-                if (
-                    appStateRef.current.match(/inactive|background/) &&
-                    nextAppState === "active"
-                ) {
-                    // If the app HAS become active, we want to run our code
-                    console.log("App has come to the foreground!");
-                    syncCompletedTasks();
-                }
-                // This stores the current app state
-                appStateRef.current = nextAppState;
-                setAppState(nextAppState);
-            });
+    //             // This checks if the app WAS running in the background but has 
+    //             // now become active
+    //             if (
+    //                 appStateRef.current.match(/inactive|background/) &&
+    //                 nextAppState === "active"
+    //             ) {
+    //                 // If the app HAS become active, we want to run our code
+    //                 console.log("App has come to the foreground!");
+    //                 syncCompletedTasks();
+    //             }
+    //             // This stores the current app state
+    //             appStateRef.current = nextAppState;
+    //             setAppState(nextAppState);
+    //         });
 
-            // Clean up
-            // This code runs when the component unmounts
-            // So in this case, that would just be when the app is entirely closed
-            return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            subscription.remove();
-    };
-        }
-    }, [])
+    //         // Clean up
+    //         // This code runs when the component unmounts
+    //         // So in this case, that would just be when the app is entirely closed
+    //         return () => {
+    //         if (intervalRef.current) clearInterval(intervalRef.current);
+    //         subscription.remove();
+    // };
+    //     }
+    // }, [])
 
 
 

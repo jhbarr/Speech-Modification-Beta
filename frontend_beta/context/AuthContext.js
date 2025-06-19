@@ -8,9 +8,9 @@ export const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
     // Tells the app whether authentication credentials are actively being retrieved and checked
-    const [authLoading, setAuthLoading] = useState(true)
+    const [authLoading, setAuthLoading] = useState(false)
     // Boolean value used to handle inner app control flow
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [isAuthenticated, setIsAuthenticated] = useState(true)
     // Used to globally keep track of the user's email
     const [userEmail, setUserEmail] = useState(null)
 
