@@ -114,7 +114,6 @@ const styles = StyleSheet.create({
     },  
     main_container: {
         flex: 1,
-        backgroundColor: '#00B0FC'
     },
     header_container: {
         justifyContent: 'center',

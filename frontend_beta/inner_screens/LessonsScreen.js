@@ -148,12 +148,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
 
+    width: "85%",
+
     flexDirection: 'row',
     
     borderRadius: 20,
     padding: 20,
     marginBottom: 71,
     marginHorizontal: 25,
+
 
     shadowColor: '#000', // Shadow color
     shadowOffset: { width: 0, height: 4 }, // Shadow offset (x, y)
@@ -164,6 +167,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: 'bold',
     paddingRight: 15,
+    textAlign: 'center',
   },
   icon: {
     color: "#6EC175"

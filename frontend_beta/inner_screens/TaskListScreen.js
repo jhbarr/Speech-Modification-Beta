@@ -37,18 +37,19 @@ export default function TaskListScreen() {
 //       },
 //       {
 //         "type": "video",
-//         "content": "https://www.youtube.com/embed/videoseries?si=s-CrqBI81_CoYhaX&list=PLJXFLCasjYl5pWHo8N6LlFzyoG-xrRxCn"
+//         "content": "https://youtu.be/lNuz_KEGnG4"
 //       },
 //       {
 //         "type": "image",
 //         "content": "https://www.speechmodification.com/uploads/2/5/6/7/25671452/courses-3-24_orig.png"
 //       },
 //       {
-//         "type": "paragraph",
-//         "content": "\nLike this? Check out our \"Real Talk\" course for advanced fluency practice!\n\n"
+//         "type": "audio",
+//         "title": "r-blend phrases",
+//         "content": "http://www.speechmodification.com/uploads/2/5/6/7/25671452/r-blends_phrases.mp3"
 //       }
-// ], "id": 18, "is_completed": true, "lesson": 2, "task_title": "SMART Goals Challenge Lesson 2 - Meaningful"}, 
-//     {"content": [4,5,6,7,8,9,10,11], "id": 19, "is_completed": true, "lesson": 2, "task_title": "SMART Goals Challenge Lesson 1 - Specific"}, 
+// ], "id": 18, "is_completed": false, "lesson": 2, "task_title": "SMART Goals Challenge Lesson 2 - Meaningful"}, 
+//     {"content": [4,5,6,7,8,9,10,11], "id": 19, "is_completed": false, "lesson": 2, "task_title": "SMART Goals Challenge Lesson 1 - Specific"}, 
 //     {"content": [7,8,9], "id": 20, "is_completed": false, "lesson": 2, "task_title": "New Year's SMART Goals Challenge!"}
 //   ]}
 
@@ -85,6 +86,7 @@ export default function TaskListScreen() {
   */
   const renderItem = (item, index) => (
     <TouchableOpacity 
+      onPress={() => navigation.navigate('task screen', {assignment: item})}
       style={[
         styles.item,
         {alignSelf: index % 2 === 0 ? 'flex-start' : 'flex-end'}
@@ -178,7 +180,8 @@ const styles = StyleSheet.create({
     headerTitle: {
       fontSize: 25,
       fontWeight: 'bold',
-      paddingTop: 15
+      paddingTop: 15,
+      paddingLeft: 50,
     },
     sectionHeader: {
       justifyContent: 'center',

@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -29,6 +29,7 @@ export default function LoginScreen() {
 
         <View style={{ flex: 0.5 }}></View>
 
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.inputContainer}>
           <Icon name='mail-outline' size={25} style={styles.icon}/>
           <TextInput 
@@ -40,7 +41,9 @@ export default function LoginScreen() {
             value={email}
           />
         </View>
+        </TouchableWithoutFeedback>
 
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.inputContainer}>
           <Icon name='lock-closed-outline' size={25} style={styles.icon}/>
           <TextInput 
@@ -52,6 +55,7 @@ export default function LoginScreen() {
             value={password}
           />
         </View>
+        </TouchableWithoutFeedback>
 
         <TouchableOpacity
           onPress={() => navigation.navigate('forgot password screen')}
