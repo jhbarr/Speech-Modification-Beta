@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import LessonTaskNavigator from './LessonTaskNavigator';
 import HomeScreen from '../inner_screens/HomeScreen';
+import AudioRecorder from '../inner_screens/AudioRecorder';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 

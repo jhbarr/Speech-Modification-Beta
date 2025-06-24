@@ -17,3 +17,4 @@ npx expo install react-native-screens react-native-safe-area-context
 npx expo install @react-native-async-storage/async-storage
 npx expo install expo-linear-gradient
 npx expo install expo-video
+npx expo install expo-audio

@@ -1,8 +1,10 @@
 import React, { useState, useContext } from 'react';
-import { Button, StyleSheet, Text, StatusBar, TouchableOpacity, View, Alert, Dimensions, Image } from 'react-native';
+import { Button, StyleSheet, Text, StatusBar, TouchableOpacity, View, Alert, Dimensions, Image, ScrollView } from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { Vimeo } from 'react-native-vimeo-iframe';
@@ -25,6 +27,9 @@ export default function TaskScreen() {
 
     // global state variables for UX
     const [isEnlarged, setIsEnlarged] = useState(false);
+
+    const tabBarHeight = useBottomTabBarHeight()
+    const insets = useSafeAreaInsets()
 
     /*
     * extractVideoInfo -> This function extracts whether a video link is a youtube or vimeo link
@@ -61,7 +66,7 @@ export default function TaskScreen() {
     const videoPlayer = (platform, video_id) => {
         if (platform === "youtube") {
             return (
-            <View style={styles.youtubeContainer}>
+            <View style={[styles.youtubeContainer, {alignSelf: 'center'}]}>
             <YoutubePlayer 
                 height={playerHeight}
                 // play={true}
@@ -72,7 +77,7 @@ export default function TaskScreen() {
         }
         else {
             return (
-            <View style={styles.vimeoContainer}>
+            <View style={[styles.vimeoContainer, { alignSelf: 'center' }]}>
             <Vimeo
                 videoId={video_id}
                 // style={styles.vimeo}
@@ -92,9 +97,14 @@ export default function TaskScreen() {
     */
     const renderText = (content) => {
         return (
-            <View style={styles.textContainer}>
-                <Text style={styles.text}>{content}</Text>
-            </View>
+            <ScrollView 
+                style={{marginBottom: tabBarHeight + 20}}
+                contentContainerStyle={{alignItems: 'center'}}
+            >
+                <View style={{backgroundColor: '#FBFAF5', padding: 20, borderRadius: 20, width: '90%'}}>
+                    <Text style={styles.text}>{content}</Text>
+                </View>
+            </ScrollView>
         )
     }
 
@@ -108,7 +118,7 @@ export default function TaskScreen() {
     const renderImage = (image) => {
         return (
         <TouchableOpacity 
-            style={styles.imageContainer}
+            style={[styles.imageContainer, {alignSelf: 'center'}]}
             onPress={() => setIsEnlarged(!isEnlarged)}
         >
             <Image 
@@ -167,21 +177,16 @@ export default function TaskScreen() {
 
             <Text style={styles.headerTitle}>{assignment.type}</Text>
         </View>
+        
 
-        <View style={styles.container}>
-            
-            {renderItem(assignment)}
+        {renderItem(assignment)}
+        
 
-        </View>
         </LinearGradient>
     )
 }
 
 const styles = StyleSheet.create({
-  container: {
-      flex: 1,
-      alignItems: 'center',
-    },
     background: {
         flex: 1,
     },
@@ -240,21 +245,15 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25, // Shadow opacity (0-1)
         shadowRadius: 3.84, // Shadow blur radius
   },
-  textContainer: {
+  textScollView: {
+    backgroundColor: "#FBFAF5", 
     width: '90%',
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    paddingHorizontal: 25,
-    backgroundColor: "#FBFAF5",
-
-    marginTop: 50,
     borderRadius: 20,
-    shadowColor: '#000', // Shadow color
-    shadowOffset: { width: 0, height: 6 }, // Shadow offset (x, y)
-    shadowOpacity: 0.25, // Shadow opacity (0-1)
-    shadowRadius: 3.84, // Shadow blur radius
 
+    // shadowColor: '#000', // Shadow color
+    // shadowOffset: { width: 0, height: 6 }, // Shadow offset (x, y)
+    // shadowOpacity: 0.25, // Shadow opacity (0-1)
+    // shadowRadius: 3.84, // Shadow blur radius
   },
   text: {
     fontSize: 20,
