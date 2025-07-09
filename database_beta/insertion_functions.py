@@ -94,9 +94,17 @@ def insert_lesson(conn, values, many=False, paid=False):
     # Insert a new lesson in the lessons table
     sql = None
     if paid == True:
-        sql = """INSERT INTO api_paidlesson(lesson_title) VALUES(%s)""" # Syntax for Postgresql
+        sql = """
+        INSERT INTO api_paidlesson(lesson_title, num_tasks)
+        VALUES(%s, %s)
+        ON CONFLICT (lesson_title) DO NOTHING;
+        """ 
     else:
-       sql = """INSERT INTO api_freelesson(lesson_title) VALUES(%s)"""
+       sql = """
+        INSERT INTO api_freelesson(lesson_title, num_tasks)
+        VALUES(%s, %s)
+        ON CONFLICT (lesson_title) DO NOTHING;
+        """ 
     
     db_commit_lessons(conn, sql, values, many=many)
 
@@ -119,18 +127,16 @@ def insert_task(conn, values, many=False, paid=False):
         sql = """
         INSERT INTO api_paidtask (lesson_id, task_title, content)
         VALUES (%s, %s, %s)
-        ON CONFLICT (task_title)
+        ON CONFLICT (lesson_id, task_title)
         DO UPDATE SET
-            task_title = EXCLUDED.task_title,
             content = EXCLUDED.content;
         """
     else:
         sql = """
         INSERT INTO api_freetask (lesson_id, task_title, content)
         VALUES (%s, %s, %s)
-        ON CONFLICT (task_title)
+        ON CONFLICT (lesson_id, task_title)
         DO UPDATE SET
-            task_title = EXCLUDED.task_title,
             content = EXCLUDED.content;
         """
 

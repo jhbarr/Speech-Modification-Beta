@@ -7,11 +7,6 @@ import { getBatchQueue, saveBatchQueue, clearBatchQueue, saveFreeLessons, getFre
 
 export const ContentContext = createContext()
 
-/*
-ONE WAY TO SPEED UP API CALLS
-    - Would be to query the lessons and tasks by their id's rather than their titles. This would save time both on comparisons
-    and by allowing the backend to just send back the ids and not have to retrieve the titles in the first place
-*/
 
 export const ContentProvider = ({ children }) => {
     // The global user email kept by the AuthContext
@@ -45,7 +40,7 @@ export const ContentProvider = ({ children }) => {
             // Retrieve all of the free lessons in the database
             // Also retrieve all of the free lessons that the user has completed
             const res_all = await api.get('api/all-free-lessons/')
-            const res_completed = await api.get(`api/free-completed-lessons/${userEmail}/`)
+            // const res_completed = await api.get(`api/free-completed-lessons/${userEmail}/`)
             
             // Get the actual data
             // Additionally, aggregate all of the completed lesson titles into a list
@@ -54,21 +49,20 @@ export const ContentProvider = ({ children }) => {
            
             // Give each lesson a property called 'is_completed'
             // This is determined by whether the lesson's id was returned by the free-completed-lessons call
-            const updatedLessons = all_lessons.map(lesson => ({
-                ...lesson,
-                is_completed: completed_lessons.has(lesson.id)
-            }))
+            // const updatedLessons = all_lessons.map(lesson => ({
+            //     ...lesson,
+            //     is_completed: completed_lessons.has(lesson.id)
+            // }))
             
             // Sort the lessons by id number
             // ** For some reason they come out a little jumbled in the API call
-            updatedLessons.sort((a, b) => a.id - b.id)
+            all_lessons.sort((a, b) => a.id - b.id) // convert back to updatedLessons in the future for lesson completion flow
             
             // // Update the global state with the retrieved lessons
-            setFreeLessons(updatedLessons)
+            setFreeLessons(all_lessons) // convert back to updatedLessons in the future for lesson completion flow
 
             // Also update the lesson data in persistent storage
-            saveFreeLessons(updatedLessons)
-            // console.log(updatedLessons)
+            saveFreeLessons(all_lessons) // convert back to updatedLessons in the future for lesson completion flow
 
         }
         // Throw an error alert if anything goes wrong
@@ -102,28 +96,27 @@ export const ContentProvider = ({ children }) => {
         // Check if the the tasks from this lesson have already been fetched
         if (!(lesson_id in freeTasks)){
             try {
-                const res_all = await api.get(`api/free-tasks-by-lesson/${lesson_id}/`)
-                const res_completed = await api.get(`api/free-completed-tasks/${userEmail}/`)
+                const res_tasks = await api.get(`api/free-tasks-by-lesson/${lesson_id}/`)
+                // const res_completed = await api.get(`api/free-completed-tasks/${userEmail}/`)
 
                 // Get the actual data
                 // Additionally, aggregate all of the completed task titles into a list
-                const all_tasks = res_all.data
-                const completed_tasks = new Set(res_completed.data.map(item => item.task_id))
+                const tasks_by_lesson = res_tasks.data
+                // const completed_tasks = new Set(res_completed.data.map(item => item.task_id))
             
                 // Give each lesson a property called 'is_completed'
                 // This is determined by whether the tasks's id was returned by the free-completed-tasks call 
-                const updated_tasks = all_tasks.map(task => ({
-                    ...task,
-                    is_completed: completed_tasks.has(task.id)
-                }))
+                // const updated_tasks = all_tasks.map(task => ({
+                //     ...task,
+                //     is_completed: completed_tasks.has(task.id)
+                // }))
 
                 // Update the free tasks setting the current lesson_id to its respective tasks
                 // ** NOTE ** To use a variable name as a key, you must put brackets around it
                 setFreeTasks(prevData => ({
                     ...prevData,
-                    [lesson_id]: updated_tasks
+                    [lesson_id]: tasks_by_lesson
                 }))
-                // console.log(updated_tasks)
                 
             }
             // Handle any errors gracefully

@@ -42,9 +42,12 @@ class PaidLesson(models.Model):
 *   content (JSON) -> The content of the task itself
 """
 class FreeTask(models.Model):
-    task_title = models.CharField(unique=True)
+    task_title = models.CharField()
     content = models.JSONField()
     lesson = models.ForeignKey(FreeLesson, on_delete=models.CASCADE, related_name='task')
+
+    class Meta:
+        unique_together = ('lesson', 'task_title')
 
     def __str__(self):
         return self.task_title
@@ -61,6 +64,9 @@ class PaidTask(models.Model):
     task_title = models.CharField(unique=True)
     content = models.JSONField()
     lesson = models.ForeignKey(PaidLesson, on_delete=models.CASCADE, related_name='task')
+
+    class Meta:
+        unique_together = ('lesson', 'task_title')
 
     def __str__(self):
         return self.task_title

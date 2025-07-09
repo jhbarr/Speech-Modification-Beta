@@ -107,7 +107,7 @@ def scrape_lessons(paid=False):
     lesson_array = []
 
     # Go through the different links and scrape their content
-    for i in range(2):
+    for i in range(len(lesson_names)):
         extension = lesson_extensions[i]
         lesson_title = lesson_names[i][0]
 

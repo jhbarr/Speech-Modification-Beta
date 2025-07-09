@@ -10,21 +10,25 @@ import json
 import scraping_beta.scraping_main as scrape
 
 if __name__ == "__main__":
-    paid = True
+    paid = False
 
     # OPEN A CONNECTION (POOL)
     config = load_config()
     conn = connect_one(config)
    
-    # lessons = None
-    # lesson_names = None
-    # if paid:
-    #     lessons = scrape.get_paid_links()[0]
-    #     lesson_names = lessons['lesson_names']
-    # else:
-    #     lessons = scrape.get_free_links()
-    #     lesson_names = lessons['lesson_names']
-    # insertion_functions.insert_lesson(conn, lesson_names, many=True, paid=paid)
+    lessons = None
+    lesson_names = None
+    lesson_values = None
+    if paid:
+        lessons = scrape.get_paid_links()[0]
+        lesson_names = lessons['lesson_names']
+        lesson_values = [(lesson_names[i][0], 0) for i in range(len(lesson_names))]
+    else:
+        lessons = scrape.get_free_links()
+        lesson_names = lessons['lesson_names']
+        lesson_values = [(lesson_names[i][0], 0) for i in range(len(lesson_names))]
+
+    insertion_functions.insert_lesson(conn, lesson_values, many=True, paid=paid)
 
     # Grab all of the tasks from the scraping module
     result = scrape.scrape_lessons(paid=paid)
