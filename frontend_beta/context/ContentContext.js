@@ -45,7 +45,7 @@ export const ContentProvider = ({ children }) => {
             // Get the actual data
             // Additionally, aggregate all of the completed lesson titles into a list
             const all_lessons = res_all.data // -> List of objects
-            const completed_lessons = new Set(res_completed.data.map(item => item.lesson_id)) // -> List of objects
+            // const completed_lessons = new Set(res_completed.data.map(item => item.lesson_id)) // -> List of objects
            
             // Give each lesson a property called 'is_completed'
             // This is determined by whether the lesson's id was returned by the free-completed-lessons call

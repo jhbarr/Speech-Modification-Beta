@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
     // Tells the app whether authentication credentials are actively being retrieved and checked
     const [authLoading, setAuthLoading] = useState(false)
     // Boolean value used to handle inner app control flow
-    const [isAuthenticated, setIsAuthenticated] = useState(true)
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
     // Used to globally keep track of the user's email
     const [userEmail, setUserEmail] = useState(null)
 
@@ -154,6 +154,8 @@ export const AuthProvider = ({ children }) => {
         const expiry = await getAccessExpiry();
         const now = Math.floor(Date.now() / 1000);
 
+        console.log(expiry)
+
         // If the expiration time exists in secure storage (indicating the existence of tokens)
         // and it is about to expire, request a new access token from the backend
         if (expiry && now >= expiry - 30) {
@@ -164,6 +166,9 @@ export const AuthProvider = ({ children }) => {
                     const res = await api.request('refresh/', { refresh })
                     await saveTokens({ access: res.data.access, refresh })
                     setIsAuthenticated(true)
+
+                    const email = await getEmail()
+                    setUserEmail(email)
                 }
                 else {
                     Alert.alert("No refresh token found")
@@ -184,26 +189,27 @@ export const AuthProvider = ({ children }) => {
                 await clearTokens()
                 setIsAuthenticated(false)
             }
+
+            setAuthLoading(false)
         }
         // If the expiration time exists and the access token is not going to expire, then simply try to get the access
         // token from storage and set the isAuthenticated to true if the access token exists
         else if (expiry) {
             const accessToken = await getAccessToken()
             if (accessToken) {
+                const email = await getEmail()
+                setUserEmail(email)
+
                 setIsAuthenticated(true)
             }
             else {
                 console.log("Error getting access token from secure storage automatically")
+                await clearTokens()
                 setIsAuthenticated(false)
             }
-        }
-        
-        // Set the global email to the user's email from persistent storage
-        const email = await getEmail()
-        setUserEmail(email)
 
-        // This is so that the user doesn't see an infinite pinwheel when they first login
-        setAuthLoading(false)
+            setAuthLoading(false)
+        }
     
     }
 

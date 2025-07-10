@@ -6,14 +6,15 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import YoutubePlayer from 'react-native-youtube-iframe';
-import { Vimeo } from 'react-native-vimeo-iframe';
+
 
 import Constants from 'expo-constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const screenWidth = Dimensions.get('window').width;
-const playerHeight = screenWidth * 9 / 16; // 16:9 aspect ratio
+import AudioRecorder from '../task_screens/AudioRecorder';
+import VideoPlayer from '../task_screens/VideoPlayer';
+import TextRenderer from '../task_screens/TextRenderer';
+
 
 export default function TaskScreen() {
     // Instantiate the route
@@ -29,65 +30,6 @@ export default function TaskScreen() {
     const [isEnlarged, setIsEnlarged] = useState(false);
 
     const tabBarHeight = useBottomTabBarHeight()
-    const insets = useSafeAreaInsets()
-
-    /*
-    * extractVideoInfo -> This function extracts whether a video link is a youtube or vimeo link
-    *   It additionally returns the video ID
-    * 
-    * FIELDS 
-    *   link (String) -> The link to the video
-    */
-    const extractVideoInfo = (link) => {
-        const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-        const vimeoRegex = /vimeo\.com\/(?:video\/)?(\d+)/;
-
-        const youtubeMatch = link.match(youtubeRegex);
-        if (youtubeMatch) {
-            return { platform: 'youtube', id: youtubeMatch[1] };
-        }
-
-        const vimeoMatch = link.match(vimeoRegex);
-        if (vimeoMatch) {
-            return { platform: 'vimeo', id: vimeoMatch[1] };
-        }
-
-        return { platform: 'unknown', id: null };
-    }
-
-
-    /*
-    * videoPlayer -> This function will return a view with an embedded video player. This is so that the
-    *   app can show videos using external links
-    * 
-    * FIELDS
-    *   Content (String) -> The link to the external video
-    */
-    const videoPlayer = (platform, video_id) => {
-        if (platform === "youtube") {
-            return (
-            <View style={[styles.youtubeContainer, {alignSelf: 'center'}]}>
-            <YoutubePlayer 
-                height={playerHeight}
-                // play={true}
-                videoId={video_id} // just the YouTube ID
-            />
-            </View>
-            )
-        }
-        else {
-            return (
-            <View style={[styles.vimeoContainer, { alignSelf: 'center' }]}>
-            <Vimeo
-                videoId={video_id}
-                // style={styles.vimeo}
-            />
-            </View>
-            )
-        }
-
-    }
-
 
     /*
     * renderText -> This function is used to render the text from the task. 
@@ -135,6 +77,7 @@ export default function TaskScreen() {
         )
     }
 
+
     /*
     * renderItem -> This function is used to render each content item in the page's flatlist.
     *   This is so that if there are multiple modules per task, they can all be rendered correctly
@@ -149,12 +92,14 @@ export default function TaskScreen() {
     const renderItem = (item) => {
         switch (item.type) {
             case "Watch":
-                const videoType = extractVideoInfo(item.content)
-                return videoPlayer(videoType.platform, videoType.id)
+                return <VideoPlayer videoObject={item.content}/>
             case "Quick Read":
-                return renderText(item.content)
+                // return renderText(item.content)
+                return <TextRenderer content={item.content}/>
             case "Picture":
                 return renderImage(item.content)
+            case "Listening":
+                return <AudioRecorder audioObject={item}/>
             default:
                 Alert.alert("No valid pre-built renderer found")
         }
@@ -212,54 +157,6 @@ const styles = StyleSheet.create({
       paddingTop: 15,
       paddingLeft: 50,
     },
-    vimeoContainer: {
-        height: playerHeight,
-        width: '95%', 
-        backgroundColor: '#FBFAF5', 
-        // overflow: 'hidden',
-        borderRadius: 20,
-        marginTop: 50,
-
-        padding: 16,
-        shadowColor: '#000', // Shadow color
-        shadowOffset: { width: 0, height: 6 }, // Shadow offset (x, y)
-        shadowOpacity: 0.25, // Shadow opacity (0-1)
-        shadowRadius: 3.84, // Shadow blur radius
-    },
-    vimeo: {
-        height: '100%', 
-        width: '100%', 
-        backgroundColor: '#FBFAF5',
-    },
-    youtubeContainer: {
-        height: playerHeight,            // Controls the height of the video
-        // overflow: 'hidden',
-        width: '95%',          // Optional: full screen width
-        backgroundColor: '#FBFAF5', // Avoid white flash behind iframe
-        borderRadius: 20,       // Optional: rounded corners
-        marginTop: 50,     // Optional: spacing
-
-        padding: 16,
-        shadowColor: '#000', // Shadow color
-        shadowOffset: { width: 0, height: 6 }, // Shadow offset (x, y)
-        shadowOpacity: 0.25, // Shadow opacity (0-1)
-        shadowRadius: 3.84, // Shadow blur radius
-  },
-  textScollView: {
-    backgroundColor: "#FBFAF5", 
-    width: '90%',
-    borderRadius: 20,
-
-    // shadowColor: '#000', // Shadow color
-    // shadowOffset: { width: 0, height: 6 }, // Shadow offset (x, y)
-    // shadowOpacity: 0.25, // Shadow opacity (0-1)
-    // shadowRadius: 3.84, // Shadow blur radius
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: 'regular',
-    lineHeight: 30,
-  },
   imageContainer: {
     width: '90%',
     alignItems: 'center',

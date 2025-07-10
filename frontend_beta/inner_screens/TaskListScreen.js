@@ -25,35 +25,6 @@ export default function TaskListScreen() {
   const lesson_id = route.params?.lesson_id;
   const lesson_title = route.params?.lesson_title
 
-//   const freeTasks = {"2" :[ 
-//     {"content": [
-//       {
-//         "type": "video",
-//         "content": "https://player.vimeo.com/video/1058015668?title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479"
-//       },
-//       {
-//         "type": "paragraph",
-//         "content": "\nIn fluent English speaking, we link words and reduce sounds. For example, in the phrase \"that is his,\" we contract \"that is\" to \"that's,\" and we reduce \"his\" to \"is.\" We link these together, and it sounds like \"that'siz.\" Use the video above to practice, and the playlist below for more quick fluency practice!\n\n"
-//       },
-//       {
-//         "type": "video",
-//         "content": "https://youtu.be/lNuz_KEGnG4"
-//       },
-//       {
-//         "type": "image",
-//         "content": "https://www.speechmodification.com/uploads/2/5/6/7/25671452/courses-3-24_orig.png"
-//       },
-//       {
-//         "type": "audio",
-//         "title": "r-blend phrases",
-//         "content": "http://www.speechmodification.com/uploads/2/5/6/7/25671452/r-blends_phrases.mp3"
-//       }
-// ], "id": 18, "is_completed": false, "lesson": 2, "task_title": "SMART Goals Challenge Lesson 2 - Meaningful"}, 
-//     {"content": [4,5,6,7,8,9,10,11], "id": 19, "is_completed": false, "lesson": 2, "task_title": "SMART Goals Challenge Lesson 1 - Specific"}, 
-//     {"content": [7,8,9], "id": 20, "is_completed": false, "lesson": 2, "task_title": "New Year's SMART Goals Challenge!"}
-//   ]}
-
-
   const typeMapping = {
     paragraph: "Quick Read",
     image: "Picture",
