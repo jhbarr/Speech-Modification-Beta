@@ -1,10 +1,7 @@
-import React, { useState, useContext } from 'react';
-import { Button, StyleSheet, Text, StatusBar, TouchableOpacity, View, Alert, Dimensions, Image, ScrollView } from 'react-native';
-import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
+import { useState } from 'react';
+import { Button, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 
@@ -14,6 +11,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import AudioRecorder from '../task_screens/AudioRecorder';
 import VideoPlayer from '../task_screens/VideoPlayer';
 import TextRenderer from '../task_screens/TextRenderer';
+import ImageRenderer from '../task_screens/ImageRenderer';
+import MixedPracticeRenderer from '../task_screens/MixedPracticeRenderer';
 
 
 export default function TaskScreen() {
@@ -25,58 +24,6 @@ export default function TaskScreen() {
 
     // Get the route params from the TaskListScreen
     const assignment = route.params?.assignment
-
-    // global state variables for UX
-    const [isEnlarged, setIsEnlarged] = useState(false);
-
-    const tabBarHeight = useBottomTabBarHeight()
-
-    /*
-    * renderText -> This function is used to render the text from the task. 
-    * 
-    * FIELDS 
-    *   content (String) -> The text content of the task
-    */
-    const renderText = (content) => {
-        return (
-            <ScrollView 
-                style={{marginBottom: tabBarHeight + 20}}
-                contentContainerStyle={{alignItems: 'center'}}
-            >
-                <View style={{backgroundColor: '#FBFAF5', padding: 20, borderRadius: 20, width: '90%'}}>
-                    <Text style={styles.text}>{content}</Text>
-                </View>
-            </ScrollView>
-        )
-    }
-
-
-    /*
-    * renderImage -> This function is used to render an image from the website
-    * 
-    * FIELDS
-    *   image (String) -> This is a url to the link from the website
-    */
-    const renderImage = (image) => {
-        return (
-        <TouchableOpacity 
-            style={[styles.imageContainer, {alignSelf: 'center'}]}
-            onPress={() => setIsEnlarged(!isEnlarged)}
-        >
-            <Image 
-                source={{ uri: image }}
-                style={[
-                    styles.image,
-                    {
-                        height: isEnlarged ? Dimensions.get('window').height * 0.6 : Dimensions.get('window').height * 0.4,
-                        width: isEnlarged ? Dimensions.get('window').width : Dimensions.get('window').width * 0.85
-                    }
-                ]}
-            />
-        </TouchableOpacity>
-        )
-    }
-
 
     /*
     * renderItem -> This function is used to render each content item in the page's flatlist.
@@ -95,11 +42,15 @@ export default function TaskScreen() {
                 return <VideoPlayer videoObject={item.content}/>
             case "Quick Read":
                 // return renderText(item.content)
-                return <TextRenderer content={item.content}/>
+                return <TextRenderer textObject={item.content}/>
             case "Picture":
-                return renderImage(item.content)
+                // return renderImage(item.content)
+                return <ImageRenderer imageObject={item.content}/>
             case "Listening":
                 return <AudioRecorder audioObject={item}/>
+            case "Mixed Practice":
+                // console.log(item.content)
+                return <MixedPracticeRenderer mixedObject={item.content}/>
             default:
                 Alert.alert("No valid pre-built renderer found")
         }
@@ -123,7 +74,6 @@ export default function TaskScreen() {
             <Text style={styles.headerTitle}>{assignment.type}</Text>
         </View>
         
-
         {renderItem(assignment)}
         
 
@@ -157,28 +107,6 @@ const styles = StyleSheet.create({
       paddingTop: 15,
       paddingLeft: 50,
     },
-  imageContainer: {
-    width: '90%',
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    // paddingHorizontal: 50,
-    backgroundColor: "#FBFAF5",
-
-    marginTop: 50,
-    borderRadius: 20,
-    shadowColor: '#000', // Shadow color
-    shadowOffset: { width: 0, height: 6 }, // Shadow offset (x, y)
-    shadowOpacity: 0.25, // Shadow opacity (0-1)
-    shadowRadius: 3.84, // Shadow blur radius
-  },
-  image: {
-    
-    height: Dimensions.get('window').height * 0.4,
-    width: Dimensions.get('window').width * 0.85,
-
-    paddingHorizontal: 10,
-    paddingVertical: 16,
-  }
+  
 })
 

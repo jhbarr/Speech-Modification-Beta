@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, StatusBar, TextInput, TouchableOpacity} from 'react-native';
+import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity} from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import { useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -19,13 +19,6 @@ export default function LessonsScreen() {
     // Set up state variables for searching capabilities
     const [searchItem, setSearchItem] = useState('')
     const [filteredData, setFilteredData] = useState([])
-
-
-    // const freeLessons = [
-    //     {"id": 1, "is_completed": true, "lesson_title": "All", "num_tasks": 5}, 
-    //     {"id": 2, "is_completed": false, "lesson_title": "2020 New Year's SMART Goals Challenge", "num_tasks": 3}, 
-    //     {"id": 3, "is_completed": false, "lesson_title": "30 Day Accent Challenge", "num_tasks": 0}, 
-    // ]
 
     /*
     * search -> This function searches through the freeLessons list for any lessons that match or include

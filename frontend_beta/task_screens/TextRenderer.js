@@ -1,15 +1,6 @@
-import React, { useState, useContext } from 'react';
-import { Button, StyleSheet, Text, StatusBar, TouchableOpacity, View, Alert, Dimensions, Image, ScrollView } from 'react-native';
-import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-
-
-import Constants from 'expo-constants';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function TextRenderer({ textObject }){ 
 
@@ -27,7 +18,7 @@ export default function TextRenderer({ textObject }){
     )
 }
 
-styles = StyleSheet.create({
+const styles = StyleSheet.create({
     textScollView: {
     backgroundColor: "#FBFAF5", 
     width: '90%',
@@ -35,7 +26,7 @@ styles = StyleSheet.create({
 
   },
   text: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: 'regular',
     lineHeight: 30,
   },

@@ -1,0 +1,53 @@
+import { useState } from 'react';
+import { Button, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Image, FlatList } from 'react-native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+
+export default function ImageRenderer({ imageObject }) {
+    // global state variables for UX
+    const [isEnlarged, setIsEnlarged] = useState(false);
+
+    return (
+        <TouchableOpacity 
+            style={[styles.imageContainer, {alignSelf: 'center'}]}
+            onPress={() => setIsEnlarged(!isEnlarged)}
+        >
+            <Image 
+                source={{ uri: imageObject }}
+                style={[
+                    styles.image,
+                    {
+                        height: isEnlarged ? Dimensions.get('window').height * 0.6 : Dimensions.get('window').height * 0.4,
+                        width: isEnlarged ? Dimensions.get('window').width : Dimensions.get('window').width * 0.85
+                    }
+                ]}
+            />
+        </TouchableOpacity>
+    )
+}
+
+styles = StyleSheet.create({
+    imageContainer: {
+    width: '90%',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    // paddingHorizontal: 50,
+    backgroundColor: "#FBFAF5",
+
+    marginTop: 50,
+    borderRadius: 20,
+    shadowColor: '#000', // Shadow color
+    shadowOffset: { width: 0, height: 6 }, // Shadow offset (x, y)
+    shadowOpacity: 0.25, // Shadow opacity (0-1)
+    shadowRadius: 3.84, // Shadow blur radius
+  },
+  image: {
+    
+    height: Dimensions.get('window').height * 0.4,
+    width: Dimensions.get('window').width * 0.85,
+
+    paddingHorizontal: 10,
+    paddingVertical: 16,
+  }
+})

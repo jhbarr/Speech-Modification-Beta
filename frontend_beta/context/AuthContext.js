@@ -154,8 +154,6 @@ export const AuthProvider = ({ children }) => {
         const expiry = await getAccessExpiry();
         const now = Math.floor(Date.now() / 1000);
 
-        console.log(expiry)
-
         // If the expiration time exists in secure storage (indicating the existence of tokens)
         // and it is about to expire, request a new access token from the backend
         if (expiry && now >= expiry - 30) {

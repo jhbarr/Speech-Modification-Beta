@@ -1,4 +1,4 @@
-import { StyleSheet, View, Dimensions} from 'react-native';
+import { StyleSheet, View, Dimensions, Text} from 'react-native';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { Vimeo } from 'react-native-vimeo-iframe';
 
@@ -15,19 +15,18 @@ export default function VideoPlayer({ videoObject }){
     *   link (String) -> The link to the video
     */
     const extractVideoInfo = (link) => {
-        console.log(link)
         const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
         const vimeoRegex = /vimeo\.com\/(?:video\/)?(\d+)/;
 
         const youtubeMatch = link.match(youtubeRegex);
         if (youtubeMatch) {
-            console.log({ platform: 'youtube', id: youtubeMatch[1] })
+            // console.log({ platform: 'youtube', id: youtubeMatch[1] })
             return { platform: 'youtube', id: youtubeMatch[1] };
         }
 
         const vimeoMatch = link.match(vimeoRegex);
         if (vimeoMatch) {
-            console.log({ platform: 'vimeo', id: vimeoMatch[1] })
+            // console.log({ platform: 'vimeo', id: vimeoMatch[1] })
             return { platform: 'vimeo', id: vimeoMatch[1] };
         }
 
@@ -35,30 +34,36 @@ export default function VideoPlayer({ videoObject }){
     }
 
     // Extract the video id and the platform from the provided video link
-    const videoContent = extractVideoInfo(videoObject)
+    const videoContent = extractVideoInfo(videoObject);
 
-    if (videoContent.platform === "youtube") {
-        return (
-        <View style={[styles.youtubeContainer, {alignSelf: 'center'}]}>
-        <YoutubePlayer 
-            height={playerHeight}
-            videoId={videoContent.id} // just the YouTube ID
-        />
+    return (
+        <View style={{ flex: 1 }}>
+            {videoContent.platform === "youtube" 
+                ? (
+                <View style={[styles.youtubeContainer, {alignSelf: 'center'}]}>
+                    <YoutubePlayer 
+                        key={videoObject.id}
+                        height={playerHeight}
+                        videoId={videoContent.id} // just the YouTube ID
+                    />
+                </View>
+                )
+                :
+                (
+                <View style={[styles.vimeoContainer, { alignSelf: 'center' }]}>
+                    <Vimeo
+                        key={videoContent.id}
+                        videoId={videoContent.id}
+                    />
+                </View>
+                )
+            }
         </View>
-        )
-    }
-    else {
-        return (
-        <View style={[styles.vimeoContainer, { alignSelf: 'center' }]}>
-        <Vimeo
-            videoId={videoContent.id}
-        />
-        </View>
-        )
-    }
+    )
+
 }
 
-styles = StyleSheet.create({
+const styles = StyleSheet.create({
     vimeoContainer: {
         height: playerHeight,
         width: '95%', 
