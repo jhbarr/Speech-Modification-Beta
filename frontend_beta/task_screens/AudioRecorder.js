@@ -1,26 +1,51 @@
+import React from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useAudioPlayer } from 'expo-audio';
 import { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { LinearGradient } from 'expo-linear-gradient';
 
-const audioSource = {
-    uri: "https://www.speechmodification.com/uploads/2/5/6/7/25671452/r-blends_phrases.mp3"
-}
 
 export default function AudioRecorder({ audioObject }) {
-  const player = useAudioPlayer(audioSource);
+  const player = useAudioPlayer(audioObject.content);
 
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     // Screen is focused
-  //     return () => {
-  //       // Screen is unfocused
-  //       player.pause();
-  //     };
-  //   }, [])
-  // );
+  /*
+  * This code pauses the sound when the component is completely unmounted
+  * But it also guards against the possibility that the audioPlayer has already
+  * been disposed of
+  */
+  useEffect(() => {
+    return () => {
+      // on unmount
+      try {
+        player.pause();
+        player.unload();
+      } catch (e) {
+        console.warn('Could not pause/unload player on unmount', e);
+      }
+    };
+  }, [player]);
+
+  /*
+  * This is similar to the useEffect, however it runs not when the component is unmounted, 
+  * but when the user simply navigates to another screen.
+  */
+  useFocusEffect(
+    React.useCallback(() => {
+      // Screen is focused
+      return () => {
+        // Screen lost focus
+        try {
+          player.pause();
+          setIsPlaying(false);
+        } catch (e) {
+          console.warn('Could not pause player on blur', e);
+        }
+      };
+    }, [player])
+  );
+
 
   const [currentTime, setCurrentTime] = useState(0);
   const [progress, setProgress] = useState(0)
@@ -36,8 +61,16 @@ export default function AudioRecorder({ audioObject }) {
     return () => clearInterval(interval);
   }, [player]);
 
+
   useEffect(() => {
     setProgress(player.duration !== 0 ? 1 - (player.duration - player.currentTime) / player.duration : 0)
+    if (Math.floor(currentTime) == Math.floor(player.duration)){
+      setProgress(0)
+      setIsPlaying(false)
+
+      player.pause()
+      player.seekTo(0)
+    }
   }, [currentTime]);
 
 
@@ -97,10 +130,12 @@ export default function AudioRecorder({ audioObject }) {
 const styles = StyleSheet.create({
   audioContainer: {
     padding: 20,
-    width: '100%',
+    width: '90%',
     backgroundColor: '#FBFAF5',
     padding: 15,
     borderRadius: 15,
+
+    alignSelf: 'center',
 
     shadowColor: '#000', // Shadow color
     shadowOffset: { width: 0, height: 3 }, // Shadow offset (x, y)

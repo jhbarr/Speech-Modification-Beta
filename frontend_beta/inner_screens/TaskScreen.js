@@ -47,7 +47,7 @@ export default function TaskScreen() {
                 // return renderImage(item.content)
                 return <ImageRenderer imageObject={item.content}/>
             case "Listening":
-                return <AudioRecorder audioObject={item}/>
+                return <AudioRecorder audioObject={item.content}/>
             case "Mixed Practice":
                 // console.log(item.content)
                 return <MixedPracticeRenderer mixedObject={item.content}/>

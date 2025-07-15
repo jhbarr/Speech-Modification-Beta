@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FBFAF5', 
         // overflow: 'hidden',
         borderRadius: 20,
-        marginTop: 50,
+        // marginTop: 50,
 
         padding: 16,
         shadowColor: '#000', // Shadow color
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
         width: '95%',          // Optional: full screen width
         backgroundColor: '#FBFAF5', // Avoid white flash behind iframe
         borderRadius: 20,       // Optional: rounded corners
-        marginTop: 50,     // Optional: spacing
+        // marginTop: 50,     // Optional: spacing
 
         padding: 16,
         shadowColor: '#000', // Shadow color

@@ -161,12 +161,13 @@ export const AuthProvider = ({ children }) => {
                 const refresh = await getRefreshToken()
                 
                 if (refresh) {
-                    const res = await api.request('refresh/', { refresh })
+                    const res = await api.request('auth/refresh/', { refresh })
                     await saveTokens({ access: res.data.access, refresh })
                     setIsAuthenticated(true)
 
                     const email = await getEmail()
                     setUserEmail(email)
+                    console.log("Refresh token not expired - logging in")
                 }
                 else {
                     Alert.alert("No refresh token found")
@@ -199,6 +200,8 @@ export const AuthProvider = ({ children }) => {
                 setUserEmail(email)
 
                 setIsAuthenticated(true)
+
+                console.log("Access token not expired - logging in")
             }
             else {
                 console.log("Error getting access token from secure storage automatically")
@@ -208,7 +211,10 @@ export const AuthProvider = ({ children }) => {
 
             setAuthLoading(false)
         }
-    
+        
+        else {
+            console.log("Refresh token expired - logging out")
+        }
     }
 
 

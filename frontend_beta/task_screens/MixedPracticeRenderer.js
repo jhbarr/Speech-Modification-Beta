@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Image, FlatList } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 import AudioRecorder from './AudioRecorder';
 import TextRenderer from './TextRenderer';
@@ -9,6 +10,8 @@ import VideoPlayer from './VideoPlayer';
 import ImageRenderer from './ImageRenderer';
 
 export default function MixedPracticeRenderer({ mixedObject }) {
+
+    const tabBarHeight = useBottomTabBarHeight()
 
     const tasksList = mixedObject.map((item, index) => ({
         ...item,
@@ -27,8 +30,6 @@ export default function MixedPracticeRenderer({ mixedObject }) {
     * for the different types of media. This should be done via a switch statement of some sort.
     */
     const renderItem = ({ item } ) => {
-        console.log(item)
-
         switch (item.type) {
             case "video":
                 return <VideoPlayer videoObject={item.content}/>
@@ -49,6 +50,7 @@ export default function MixedPracticeRenderer({ mixedObject }) {
             data={tasksList}
             renderItem={renderItem}
             keyExtractor={item => item.id}
+            style={{marginBottom: tabBarHeight + 20}}
         />
     )
 }

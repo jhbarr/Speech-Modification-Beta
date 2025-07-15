@@ -35,7 +35,7 @@ styles = StyleSheet.create({
     // paddingHorizontal: 50,
     backgroundColor: "#FBFAF5",
 
-    marginTop: 50,
+    // marginTop: 50,
     borderRadius: 20,
     shadowColor: '#000', // Shadow color
     shadowOffset: { width: 0, height: 6 }, // Shadow offset (x, y)
