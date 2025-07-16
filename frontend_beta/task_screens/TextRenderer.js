@@ -2,13 +2,13 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 
-export default function TextRenderer({ textObject }){ 
+export default function TextRenderer({ textObject, useBottomMargin }){ 
 
     const tabBarHeight = useBottomTabBarHeight()
 
     return (
         <ScrollView 
-            style={{marginBottom: tabBarHeight + 20}}
+            style={{marginBottom: useBottomMargin ? tabBarHeight + 20 : 0}}
             contentContainerStyle={{alignItems: 'center'}}
         >
             <View style={{backgroundColor: '#FBFAF5', padding: 20, borderRadius: 20, width: '90%'}}>

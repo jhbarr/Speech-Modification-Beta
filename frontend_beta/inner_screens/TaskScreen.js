@@ -3,7 +3,7 @@ import { Button, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Im
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 import Constants from 'expo-constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -41,15 +41,12 @@ export default function TaskScreen() {
             case "Watch":
                 return <VideoPlayer videoObject={item.content}/>
             case "Quick Read":
-                // return renderText(item.content)
-                return <TextRenderer textObject={item.content}/>
+                return <TextRenderer textObject={item.content} useBottomMargin={true}/>
             case "Picture":
-                // return renderImage(item.content)
-                return <ImageRenderer imageObject={item.content}/>
+                return <ImageRenderer imageObject={item.content} useStyle={true}/>
             case "Listening":
                 return <AudioRecorder audioObject={item.content}/>
             case "Mixed Practice":
-                // console.log(item.content)
                 return <MixedPracticeRenderer mixedObject={item.content}/>
             default:
                 Alert.alert("No valid pre-built renderer found")

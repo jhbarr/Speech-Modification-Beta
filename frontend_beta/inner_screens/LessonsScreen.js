@@ -46,8 +46,19 @@ export default function LessonsScreen() {
     * in the stack.
     */
     const navigate_screens = async (lesson_id, lesson_title) => {
-        await getFreeTasksByLesson(lesson_id)
-        navigation.navigate('task list screen', {lesson_id: lesson_id, lesson_title: lesson_title})
+      try {
+        const tasks = await getFreeTasksByLesson(lesson_id);
+        console.log("Tasks fetched:", tasks);
+        // you can now check if tasks is a valid value (e.g., array, object)
+        if (!tasks || tasks.length === 0) {
+          console.warn("No tasks found for this lesson.");
+        }
+        else {
+          navigation.navigate('task list screen', {lesson_id: lesson_id, lesson_title: lesson_title})
+        }
+      } catch (error) {
+        console.error("Error navigating to task list page:", error);
+    }
     }
 
     /*

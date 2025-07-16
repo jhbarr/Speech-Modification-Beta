@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Image, FlatList } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, TouchableOpacity, View, Dimensions, Image } from 'react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
-export default function ImageRenderer({ imageObject }) {
+export default function ImageRenderer({ imageObject, useStyle }) {
     // global state variables for UX
     const [isEnlarged, setIsEnlarged] = useState(false);
 
+    const tabBarHeight = useBottomTabBarHeight()
+
     return (
+        <View style={useStyle ? { flex: 1, marginBottom: tabBarHeight + 50, justifyContent:'center'} : {}}>
         <TouchableOpacity 
             style={[styles.imageContainer, {alignSelf: 'center'}]}
             onPress={() => setIsEnlarged(!isEnlarged)}
@@ -23,6 +25,7 @@ export default function ImageRenderer({ imageObject }) {
                 ]}
             />
         </TouchableOpacity>
+        </View>
     )
 }
 
@@ -31,11 +34,8 @@ styles = StyleSheet.create({
     width: '90%',
     alignItems: 'center',
     justifyContent: 'center',
-
     // paddingHorizontal: 50,
     backgroundColor: "#FBFAF5",
-
-    // marginTop: 50,
     borderRadius: 20,
     shadowColor: '#000', // Shadow color
     shadowOffset: { width: 0, height: 6 }, // Shadow offset (x, y)

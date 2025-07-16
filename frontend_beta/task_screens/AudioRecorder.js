@@ -15,36 +15,36 @@ export default function AudioRecorder({ audioObject }) {
   * But it also guards against the possibility that the audioPlayer has already
   * been disposed of
   */
-  useEffect(() => {
-    return () => {
-      // on unmount
-      try {
-        player.pause();
-        player.unload();
-      } catch (e) {
-        console.warn('Could not pause/unload player on unmount', e);
-      }
-    };
-  }, [player]);
+  // useEffect(() => {
+  //   return () => {
+  //     // on unmount
+  //     try {
+  //       player.pause();
+  //       player.unload();
+  //     } catch (e) {
+  //       console.warn('Could not pause/unload player on unmount', e);
+  //     }
+  //   };
+  // }, [player]);
 
   /*
   * This is similar to the useEffect, however it runs not when the component is unmounted, 
   * but when the user simply navigates to another screen.
   */
-  useFocusEffect(
-    React.useCallback(() => {
-      // Screen is focused
-      return () => {
-        // Screen lost focus
-        try {
-          player.pause();
-          setIsPlaying(false);
-        } catch (e) {
-          console.warn('Could not pause player on blur', e);
-        }
-      };
-    }, [player])
-  );
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     // Screen is focused
+  //     return () => {
+  //       // Screen lost focus
+  //       try {
+  //         player.pause();
+  //         setIsPlaying(false);
+  //       } catch (e) {
+  //         console.warn('Could not pause player on blur', e);
+  //       }
+  //     };
+  //   }, [player])
+  // );
 
 
   const [currentTime, setCurrentTime] = useState(0);

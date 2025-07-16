@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }) => {
                 const refresh = await getRefreshToken()
                 
                 if (refresh) {
-                    const res = await api.request('auth/refresh/', { refresh })
+                    const res = await api.post('auth/refresh/', { refresh })
                     await saveTokens({ access: res.data.access, refresh })
                     setIsAuthenticated(true)
 

@@ -33,7 +33,9 @@
     "plugins": [
       "expo-secure-store",
       "expo-video",
-      "expo-audio"
+      ["expo-audio", {
+        "microphonePermission": "Allow frontend_beta to access your microphone."
+      }]
     ]
   }
 }

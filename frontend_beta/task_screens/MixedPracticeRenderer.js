@@ -1,7 +1,4 @@
-import { useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Image, FlatList } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Alert, FlatList } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 import AudioRecorder from './AudioRecorder';
@@ -32,14 +29,29 @@ export default function MixedPracticeRenderer({ mixedObject }) {
     const renderItem = ({ item } ) => {
         switch (item.type) {
             case "video":
-                return <VideoPlayer videoObject={item.content}/>
+                return (
+                    <View style={{marginBottom: 30}}>
+                        <VideoPlayer videoObject={item.content}/>
+                    </View>
+                )
             case "paragraph":
-                return <TextRenderer textObject={item.content}/>
+                return (
+                    <View style={{marginBottom: 30}}>
+                        <TextRenderer textObject={item.content} useBottomMargin={false}/>
+                    </View>
+                )
             case "image":
-                // return renderImage(item.content)
-                return <ImageRenderer imageObject={item.content}/>
+                return ( 
+                    <View style={{marginBottom: 30}}>
+                        <ImageRenderer imageObject={item.content} useStyle={false}/>
+                    </View>
+                )
             case "audio":
-                return <AudioRecorder audioObject={item}/>
+                 return(
+                    <View style={{marginBottom: 25}}>
+                        <AudioRecorder audioObject={item}/>
+                    </View>
+                 )
             default:
                 Alert.alert("No valid pre-built renderer found (in mixed practice renderer)")
         }

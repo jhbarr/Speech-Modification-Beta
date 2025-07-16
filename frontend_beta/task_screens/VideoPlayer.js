@@ -1,11 +1,14 @@
 import { StyleSheet, View, Dimensions, Text} from 'react-native';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { Vimeo } from 'react-native-vimeo-iframe';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 const screenWidth = Dimensions.get('window').width;
 const playerHeight = screenWidth * 9 / 16; // 16:9 aspect ratio
 
 export default function VideoPlayer({ videoObject }){
+
+    const tabBarHeight = useBottomTabBarHeight()
 
     /*
     * extractVideoInfo -> This function extracts whether a video link is a youtube or vimeo link
@@ -37,7 +40,7 @@ export default function VideoPlayer({ videoObject }){
     const videoContent = extractVideoInfo(videoObject);
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, marginBottom: tabBarHeight + 50, justifyContent:'center'}}>
             {videoContent.platform === "youtube" 
                 ? (
                 <View style={[styles.youtubeContainer, {alignSelf: 'center'}]}>
@@ -68,9 +71,7 @@ const styles = StyleSheet.create({
         height: playerHeight,
         width: '95%', 
         backgroundColor: '#FBFAF5', 
-        // overflow: 'hidden',
         borderRadius: 20,
-        // marginTop: 50,
 
         padding: 16,
         shadowColor: '#000', // Shadow color
@@ -85,11 +86,9 @@ const styles = StyleSheet.create({
     },
     youtubeContainer: {
         height: playerHeight,            // Controls the height of the video
-        // overflow: 'hidden',
         width: '95%',          // Optional: full screen width
         backgroundColor: '#FBFAF5', // Avoid white flash behind iframe
         borderRadius: 20,       // Optional: rounded corners
-        // marginTop: 50,     // Optional: spacing
 
         padding: 16,
         shadowColor: '#000', // Shadow color

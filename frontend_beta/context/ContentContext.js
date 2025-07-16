@@ -132,9 +132,6 @@ export const ContentProvider = ({ children }) => {
                 Alert.alert("Error loading free tasks", errorMessage);
             }
         } 
-        else {
-            console.log(freeTasks[lesson_id])
-        }
     }
 
     /*

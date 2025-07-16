@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import LessonTaskNavigator from './LessonTaskNavigator';
 import HomeScreen from '../inner_screens/HomeScreen';
+import VoiceRecorder from '../task_screens/VoiceRecorder';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -53,7 +54,7 @@ export default function InsideNavigator() {
             />
             <Tab.Screen 
                 name='Free Lessons'
-                component={LessonTaskNavigator}
+                component={VoiceRecorder}
                 options={{ headerShown: false }}
             />
         </Tab.Navigator>
