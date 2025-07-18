@@ -1,14 +1,18 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Button, Modal } from 'react-native';
 import { useAudioPlayer } from 'expo-audio';
 import { useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import VoiceRecorder from './VoiceRecorder';
+
 
 export default function AudioRecorder({ audioObject }) {
   const player = useAudioPlayer(audioObject.content);
+
+  const [isModalVisible, setItModalVisible] = useState(false)
 
   /*
   * This code pauses the sound when the component is completely unmounted
@@ -51,6 +55,11 @@ export default function AudioRecorder({ audioObject }) {
   const [progress, setProgress] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
 
+  /*
+  * These two useEffects below handle the progress of the player bar
+  * Every 500ms the progress of the player is updated and so then we can reclect that 
+  * change in the actual progress bar 
+  */
   useEffect(() => {
     const interval = setInterval(() => {
       if (player) {
@@ -73,7 +82,11 @@ export default function AudioRecorder({ audioObject }) {
     }
   }, [currentTime]);
 
-
+  /*
+    * handlePlay (async) -> This function handles the playback of the recording. 
+    * If the recording is not yet playing, then it begins to play it
+    * If it is already playing, then it stops the player
+    */
   const handlePlay = async () => {
     setIsPlaying(!isPlaying)
     if (isPlaying) {
@@ -120,8 +133,26 @@ export default function AudioRecorder({ audioObject }) {
         >
           <Ionicons name='refresh-outline' size={35}/>
         </TouchableOpacity>
+
+        <Button 
+          title="Voice Recorder"
+          onPress={() => setItModalVisible(true)}
+          />
         
       </View>
+
+      <Modal
+        animationType="slide" // or "fade", "none"
+        transparent={false} // set to true for a semi-transparent background
+        visible={isModalVisible}
+        onRequestClose={() => {
+          setIsModalVisible(!isModalVisible);
+        }}
+      >
+        <View style={{height: 700, justifyContent: 'flex-end'}}>
+          <VoiceRecorder/>
+        </View>
+    </Modal>
 
     </View>
   );

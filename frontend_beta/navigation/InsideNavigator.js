@@ -54,7 +54,7 @@ export default function InsideNavigator() {
             />
             <Tab.Screen 
                 name='Free Lessons'
-                component={VoiceRecorder}
+                component={LessonTaskNavigator}
                 options={{ headerShown: false }}
             />
         </Tab.Navigator>

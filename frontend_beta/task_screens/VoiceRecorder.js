@@ -1,8 +1,6 @@
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useEffect, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useRef } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';;
 
 import {
   useAudioRecorder,
@@ -21,6 +19,17 @@ export default function VoiceRecorder() {
     const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
     const state = useAudioRecorderState(recorder);
 
+    const [audioUri, setAudioUri] = useState('')
+    const player = useAudioPlayer({ uri: audioUri })
+    const [currentTime, setCurrentTime] = useState(0);
+    const [progress, setProgress] = useState(0)
+    const [isPlaying, setIsPlaying] = useState(false)
+
+    /*
+    * This use effect is to ask for the user's microphone permissions before we can start recording with
+    * the recorder
+    * Otherwise I don't believe that we would be able to record anything
+    */
     useEffect(() => {
         (async () => {
         const { granted } = await AudioModule.requestRecordingPermissionsAsync();
@@ -34,15 +43,84 @@ export default function VoiceRecorder() {
         })();
     }, []);
 
-     const toggle = async () => {
+    /*
+    * handleRecord -> This function takes in the state of the recorder and either begins
+    * recording or stops it and saves that recording to a local mp4 file that can be accessed
+    * by the audio player. 
+    */
+     const handleRecord = async () => {
         if (state.isRecording) {
-            await recorder.stop();
-            console.log('Saved to URI:', recorder.uri);
+            try{
+                await recorder.stop();
+                console.log('Saved to URI:', recorder.uri);
+                setAudioUri(recorder.uri)
+            } catch (e){
+                console.warn("Error stopping recording:", e)
+            }
         } else {
-            await recorder.prepareToRecordAsync();
-            recorder.record();
+            try{
+                await recorder.prepareToRecordAsync();
+                recorder.record();
+            }
+            catch (e) {
+                console.warn("Error starting recording:", e)
+            }
         }
     };
+
+
+    /*
+    * These two useEffects below handle the progress of the player bar
+    * Every 500ms the progress of the player is updated and so then we can reclect that 
+    * change in the actual progress bar 
+    */
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (player) {
+            setCurrentTime(player.currentTime);
+            }
+        }, 500); // every 500ms
+
+        return () => clearInterval(interval);
+        }, [player]);
+    
+    
+      useEffect(() => {
+        setProgress(player.duration !== 0 ? 1 - (player.duration - player.currentTime) / player.duration : 0)
+        if (Math.floor(currentTime) == Math.floor(player.duration)){
+          setProgress(0)
+          setIsPlaying(false)
+    
+          player.pause()
+          player.seekTo(0)
+        }
+      }, [currentTime]);
+
+
+    /*
+    * handlePlay (async) -> This function handles the playback of the recording. 
+    * If the recording is not yet playing, then it begins to play it
+    * If it is already playing, then it stops the player
+    */
+    const handlePlay = async () => {
+        setIsPlaying(!isPlaying)
+        if (isPlaying) {
+            try {
+                await player.pause();
+            } 
+            catch (e) {
+                console.error("Error playing sound:", e);
+            }
+        }
+        else {
+            try {
+                await player.play();
+            } 
+            catch (e) {
+                console.error("Error playing sound:", e);
+            }
+        }
+    }
 
     return (
         <View style={{flex: 1, backgroundColor: '#FBFAF5'}}>
@@ -64,16 +142,11 @@ export default function VoiceRecorder() {
                     colors={["#2A1AD8", "#7231EC"]}
                     style={styles.buttonOutline}
                 >
-                <TouchableOpacity style={styles.button} onPress={toggle}>
-                    <Ionicons style={{ color: 'white' }} name='ellipse' size={30}/>
-                    <Text style={styles.buttonText}>Record</Text>
+                <TouchableOpacity style={styles.button} onPress={handleRecord}>
+                    <Ionicons style={{ color: 'white' }} name={state.isRecording ? 'square-outline' : 'ellipse-outline'} size={30}/>
+                    <Text style={styles.buttonText}>{state.isRecording ? "Stop" : "Record"}</Text>
                 </TouchableOpacity>
                 </LinearGradient>
-
-                <TouchableOpacity style={styles.noLinearButton} onPress={toggle}>
-                    <Ionicons style={{ color: '#7231EC' }} name='square' size={30}/>
-                    <Text style={[styles.buttonText, {color: '#7231EC'}]}>Stop</Text>
-                </TouchableOpacity>
 
                 {state.isRecording ? <Text>Recording</Text> : <></>}
 
@@ -81,16 +154,24 @@ export default function VoiceRecorder() {
                     colors={["#2A1AD8", "#7231EC"]}
                     style={styles.buttonOutline}
                 >
-                <TouchableOpacity style={styles.button} onPress={playRecording}>
-                    <Ionicons style={{ color: 'white' }} name='play' size={30}/>
-                    <Text style={styles.buttonText}>Play</Text>
+                <TouchableOpacity style={styles.button} onPress={handlePlay}>
+                    <Ionicons style={{ color: 'white' }} name={isPlaying ? 'pause-outline' : 'play-outline'} size={30}/>
+                    <Text style={styles.buttonText}>{isPlaying ? "Pause" : "Play"}</Text>
                 </TouchableOpacity>
                 </LinearGradient>
 
-                <TouchableOpacity style={styles.noLinearButton} onPress={stopRecording}>
-                    <Ionicons style={{ color: '#7231EC' }} name='pause' size={30}/>
-                    <Text style={[styles.buttonText, {color: '#7231EC'}]}>Pause</Text>
-                </TouchableOpacity>
+                {
+                    audioUri.uri !== ""?
+                    (
+                    <View style={styles.progressBar}>
+                        <View style={[styles.progressFill, { flex: progress }]} />
+                        <View style={{ flex: 1 - progress }} />
+                    </View>
+                    )
+                :
+                    (<></>)
+                }
+                
             </View>
         </View>
 )
@@ -136,19 +217,16 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: 'white',
     },
-    noLinearButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
+        progressBar: {
         width: '80%',
-        borderWidth: 2,
-
-        paddingVertical: 15,
-        paddingHorizontal: 25,
-        borderRadius: 20,
-        borderColor: "#7231EC",
-
-        marginBottom: 100,
-    }
+        flexDirection: 'row',
+        height: 10,
+        backgroundColor: '#eee',
+        borderRadius: 5,
+        overflow: 'hidden'
+    },
+    progressFill: {
+        backgroundColor: '#4CAF50'
+    },
   
 })

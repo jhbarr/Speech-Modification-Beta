@@ -117,6 +117,8 @@ export const ContentProvider = ({ children }) => {
                     ...prevData,
                     [lesson_id]: tasks_by_lesson
                 }))
+
+                return tasks_by_lesson
                 
             }
             // Handle any errors gracefully
@@ -132,6 +134,9 @@ export const ContentProvider = ({ children }) => {
                 Alert.alert("Error loading free tasks", errorMessage);
             }
         } 
+        else {
+            return freeTasks[lesson_id]
+        }
     }
 
     /*
