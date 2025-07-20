@@ -12,7 +12,7 @@ export default function TextRenderer({ textObject, useBottomMargin }){
             contentContainerStyle={{alignItems: 'center'}}
         >
             <View style={{backgroundColor: '#FBFAF5', padding: 20, borderRadius: 20, width: '90%'}}>
-                <Text style={styles.text}>{textObject}</Text>
+                <Text style={styles.text}>{textObject.trimEnd()}</Text>
             </View>
         </ScrollView>
     )

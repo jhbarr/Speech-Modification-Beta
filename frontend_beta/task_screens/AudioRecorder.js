@@ -7,12 +7,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import VoiceRecorder from './VoiceRecorder';
+// import VoiceRecorder2 from './VoiceRecorder2';
 
 
 export default function AudioRecorder({ audioObject }) {
   const player = useAudioPlayer(audioObject.content);
 
-  const [isModalVisible, setItModalVisible] = useState(false)
+  const [isModalVisible, setIsModalVisible] = useState(false)
 
   /*
   * This code pauses the sound when the component is completely unmounted
@@ -65,7 +66,7 @@ export default function AudioRecorder({ audioObject }) {
       if (player) {
         setCurrentTime(player.currentTime);
       }
-    }, 500); // every 500ms
+    }, 250); // every 500ms
 
     return () => clearInterval(interval);
   }, [player]);
@@ -73,7 +74,7 @@ export default function AudioRecorder({ audioObject }) {
 
   useEffect(() => {
     setProgress(player.duration !== 0 ? 1 - (player.duration - player.currentTime) / player.duration : 0)
-    if (Math.floor(currentTime) == Math.floor(player.duration)){
+    if (parseFloat(currentTime.toFixed(3)) >= parseFloat(player.duration.toFixed(3)) - 0.1){
       setProgress(0)
       setIsPlaying(false)
 
@@ -105,54 +106,40 @@ export default function AudioRecorder({ audioObject }) {
     }
   }
 
+  const onModalClose = () => {
+    setIsModalVisible(false);
+  };
+
   return (
     <View style={styles.audioContainer}>
-      <Text style={styles.audioTitle}>{audioObject.title}</Text>
+        <Text style={styles.audioTitle}>{audioObject.title}</Text>
 
-      <View style={styles.playerContainer}>
-        <TouchableOpacity 
-          style={styles.playButton}
-          onPress={handlePlay}
-        >
-          <Ionicons name={isPlaying ? 'pause-outline' : 'play-outline'} size={35}/>
-        </TouchableOpacity>
+        <View style={styles.playerContainer}>
+          <TouchableOpacity style={styles.playButton} onPress={handlePlay} >
+            <Ionicons name={isPlaying ? 'pause-outline' : 'play-outline'} size={35}/>
+          </TouchableOpacity>
 
-        {/* Progress bar container */}
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { flex: progress }]} />
-          <View style={{ flex: 1 - progress }} />
+          {/* Progress bar container */}
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { flex: progress }]} />
+            <View style={{ flex: 1 - progress }} />
+          </View>
+
+          <TouchableOpacity 
+            style={styles.playButton}
+            onPress={() => {
+              player.seekTo(0)
+              player.play()
+              setIsPlaying(true)
+            }}
+          >
+            <Ionicons name='refresh-outline' size={35}/>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity 
-          style={styles.playButton}
-          onPress={() => {
-            player.seekTo(0)
-            player.play()
-            setIsPlaying(true)
-          }}
-        >
-          <Ionicons name='refresh-outline' size={35}/>
-        </TouchableOpacity>
+        <Button title="Voice Recorder" onPress={() => setIsModalVisible(true)} color='#7231EC'/>
 
-        <Button 
-          title="Voice Recorder"
-          onPress={() => setItModalVisible(true)}
-          />
-        
-      </View>
-
-      <Modal
-        animationType="slide" // or "fade", "none"
-        transparent={false} // set to true for a semi-transparent background
-        visible={isModalVisible}
-        onRequestClose={() => {
-          setIsModalVisible(!isModalVisible);
-        }}
-      >
-        <View style={{height: 700, justifyContent: 'flex-end'}}>
-          <VoiceRecorder/>
-        </View>
-    </Modal>
+        <VoiceRecorder isVisible={isModalVisible} onClose={onModalClose} />
 
     </View>
   );
@@ -200,4 +187,7 @@ const styles = StyleSheet.create({
   progressFill: {
     backgroundColor: '#4CAF50'
   },
+  voiceRecorderButton: {
+    color: '#7231EC'
+  },  
 });

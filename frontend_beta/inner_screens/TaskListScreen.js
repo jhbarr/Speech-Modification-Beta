@@ -37,7 +37,7 @@ export default function TaskListScreen() {
     "Quick Read": "book-outline",
     "Picture": "image-outline",
     "Watch": "videocam-outline",
-    "Mixed Practice": "",
+    "Mixed Practice": "flask-outline",
     "Listening": "mic-outline",
   }
 

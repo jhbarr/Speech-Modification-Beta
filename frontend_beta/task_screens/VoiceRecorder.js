@@ -1,6 +1,7 @@
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Modal } from 'react-native';
 import { useEffect, useState } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';;
+import { LinearGradient } from 'expo-linear-gradient';
+import * as FileSystem from 'expo-file-system';
 
 import {
   useAudioRecorder,
@@ -14,16 +15,21 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Constants from 'expo-constants';
 
-export default function VoiceRecorder() {
+export default function VoiceRecorder({ isVisible, onClose }) {
 
+    // Audio Recorder constants
     const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-    const state = useAudioRecorderState(recorder);
+    const state = useAudioRecorderState(recorder)
 
+    // Audio File Path Constants
     const [audioUri, setAudioUri] = useState('')
-    const player = useAudioPlayer({ uri: audioUri })
     const [currentTime, setCurrentTime] = useState(0);
     const [progress, setProgress] = useState(0)
     const [isPlaying, setIsPlaying] = useState(false)
+
+    // Audio Player constants
+    const player = useAudioPlayer({ uri: audioUri})
+
 
     /*
     * This use effect is to ask for the user's microphone permissions before we can start recording with
@@ -43,32 +49,53 @@ export default function VoiceRecorder() {
         })();
     }, []);
 
+
+    // -------- AUDIO RECORDER FUNCTIONS -------
     /*
     * handleRecord -> This function takes in the state of the recorder and either begins
     * recording or stops it and saves that recording to a local mp4 file that can be accessed
     * by the audio player. 
     */
-     const handleRecord = async () => {
+    const handleRecord = async () => {
+
+        // Check if the recorder is already running
+        // If so we want to stop the recording
         if (state.isRecording) {
-            try{
-                await recorder.stop();
-                console.log('Saved to URI:', recorder.uri);
+            try {
+                // Stop the recording
+                await recorder.stop()
+                // Set the global audioUri to the current recorder's uri
                 setAudioUri(recorder.uri)
-            } catch (e){
-                console.warn("Error stopping recording:", e)
-            }
-        } else {
-            try{
-                await recorder.prepareToRecordAsync();
-                recorder.record();
+
+                console.log("Recorder URI: ", recorder.uri)
             }
             catch (e) {
-                console.warn("Error starting recording:", e)
+                console.warn("Error stopping recording: ", e)
             }
         }
-    };
+        // Otherwise we want to start recording
+        else {
+            try {
+                // Check if there is an existent URI (meaning we have made a previous recording)
+                // If so, delete it and reflect that change in the component
+                if (audioUri !== '') {
+                    await FileSystem.deleteAsync(audioUri)
+                    setAudioUri('')
+                }
+                
+                // Prepare the recorder and start the recording
+                await recorder.prepareToRecordAsync()
+                recorder.record()
+            }
+            catch (e) {
+                console.warn("Error starting recording: ", e)
+            }
+        }
+    } 
 
 
+
+    // ---------- AUDIO PLAYER FUNCTIONS ---------
     /*
     * These two useEffects below handle the progress of the player bar
     * Every 500ms the progress of the player is updated and so then we can reclect that 
@@ -79,22 +106,22 @@ export default function VoiceRecorder() {
             if (player) {
             setCurrentTime(player.currentTime);
             }
-        }, 500); // every 500ms
+        }, 250); // every 500ms
 
         return () => clearInterval(interval);
         }, [player]);
     
     
-      useEffect(() => {
-        setProgress(player.duration !== 0 ? 1 - (player.duration - player.currentTime) / player.duration : 0)
-        if (Math.floor(currentTime) == Math.floor(player.duration)){
-          setProgress(0)
-          setIsPlaying(false)
-    
-          player.pause()
-          player.seekTo(0)
-        }
-      }, [currentTime]);
+    useEffect(() => {
+    setProgress(player.duration !== 0 ? 1 - (player.duration - player.currentTime) / player.duration : 0)
+    if (parseFloat(currentTime.toFixed(2)) == parseFloat(player.duration.toFixed(2))){ 
+        setProgress(0)
+        setIsPlaying(false)
+
+        player.pause()
+        player.seekTo(0)
+    }
+    }, [currentTime]);
 
 
     /*
@@ -103,78 +130,77 @@ export default function VoiceRecorder() {
     * If it is already playing, then it stops the player
     */
     const handlePlay = async () => {
-        setIsPlaying(!isPlaying)
+        // We first want to check whether the player is already playing audio
+        // If so, then we want to stop the audio from playing
         if (isPlaying) {
             try {
-                await player.pause();
-            } 
+                // Pause the player and reflect that change in the global state
+                await player.pause()
+                setIsPlaying(false)
+            }
             catch (e) {
-                console.error("Error playing sound:", e);
+                console.warn("Error pausing recording: ", e)
             }
         }
+        // If it's not playing, then we want to start it
         else {
             try {
-                await player.play();
-            } 
+                // Start the player and reflect that change in the state variable
+                await player.play()
+                setIsPlaying(true)
+            }
             catch (e) {
-                console.error("Error playing sound:", e);
+                console.warn("Error playing recording: ", e)
             }
         }
     }
 
     return (
-        <View style={{flex: 1, backgroundColor: '#FBFAF5'}}>
-            <LinearGradient
-                colors={["#2A1AD8", "#7231EC"]}
-                style={styles.header}
-            >
-            <TouchableOpacity
-                style={styles.header_container}
-            >
-                <Ionicons style={{ color: 'white' }} name='chevron-back-outline' size={30}/>
-            </TouchableOpacity>
+        <View>
+            <Modal animationType='slide' transparent={true} visible={isVisible}>
+            <View style={styles.modalContent}>
 
-            <Text style={styles.headerTitle}>Voice Recorder</Text>
-            </LinearGradient>
-
-            <View style={{flex: 1, alignItems: 'center'}}>
-                <LinearGradient
-                    colors={["#2A1AD8", "#7231EC"]}
-                    style={styles.buttonOutline}
-                >
-                <TouchableOpacity style={styles.button} onPress={handleRecord}>
-                    <Ionicons style={{ color: 'white' }} name={state.isRecording ? 'square-outline' : 'ellipse-outline'} size={30}/>
-                    <Text style={styles.buttonText}>{state.isRecording ? "Stop" : "Record"}</Text>
-                </TouchableOpacity>
+                <LinearGradient colors={["#2A1AD8", "#7231EC"]} style={styles.header}>
+                    <TouchableOpacity style={styles.header_container} onPress={onClose}>
+                        <Ionicons style={{ color: 'white' }} name='chevron-back-outline' size={30}/>
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Voice Recorder</Text>
                 </LinearGradient>
 
-                {state.isRecording ? <Text>Recording</Text> : <></>}
+                <View style={{flex: 1, alignItems: 'center'}}>
+                    <LinearGradient colors={["#2A1AD8", "#7231EC"]} style={styles.buttonOutline}>
+                        <TouchableOpacity style={styles.button} onPress={handleRecord}>
+                            <Ionicons style={{ color: 'white' }} name={state.isRecording ? 'square-outline' : 'ellipse-outline'} size={30}/>
+                            <Text style={styles.buttonText}>{state.isRecording ? "Stop" : "Record"}</Text>
+                        </TouchableOpacity>
+                    </LinearGradient>
 
-                <LinearGradient
-                    colors={["#2A1AD8", "#7231EC"]}
-                    style={styles.buttonOutline}
-                >
-                <TouchableOpacity style={styles.button} onPress={handlePlay}>
-                    <Ionicons style={{ color: 'white' }} name={isPlaying ? 'pause-outline' : 'play-outline'} size={30}/>
-                    <Text style={styles.buttonText}>{isPlaying ? "Pause" : "Play"}</Text>
-                </TouchableOpacity>
-                </LinearGradient>
+                    {state.isRecording ? <Text>Recording</Text> : <></>}
 
-                {
-                    audioUri.uri !== ""?
-                    (
-                    <View style={styles.progressBar}>
-                        <View style={[styles.progressFill, { flex: progress }]} />
-                        <View style={{ flex: 1 - progress }} />
-                    </View>
-                    )
-                :
-                    (<></>)
-                }
-                
+                    <LinearGradient colors={["#2A1AD8", "#7231EC"]} style={styles.buttonOutline}>
+                        <TouchableOpacity style={styles.button} onPress={handlePlay}>
+                            <Ionicons style={{ color: 'white' }} name={isPlaying ? 'pause-outline' : 'play-outline'} size={30}/>
+                            <Text style={styles.buttonText}>{isPlaying ? "Pause" : "Play"}</Text>
+                        </TouchableOpacity>
+                    </LinearGradient>
+
+                    {
+                        audioUri.uri !== ""?
+                        (
+                        <View style={styles.progressBar}>
+                            <View style={[styles.progressFill, { flex: progress }]} />
+                            <View style={{ flex: 1 - progress }} />
+                        </View>
+                        )
+                    :
+                        (<></>)
+                    }
+                    
+                </View>
             </View>
+            </Modal>
         </View>
-)
+    )
 }
 
 const styles = StyleSheet.create({
@@ -197,6 +223,13 @@ const styles = StyleSheet.create({
       paddingTop: 15,
       paddingLeft: 20,
       color: 'white'
+    },
+    modalContent: {
+        height: '100%',
+        width: '100%',
+        position: 'absolute',
+        bottom: 0,
+        backgroundColor: '#FBFAF5'
     },
     buttonOutline: {
         width: '80%',
