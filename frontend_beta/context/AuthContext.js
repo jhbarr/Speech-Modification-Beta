@@ -154,6 +154,8 @@ export const AuthProvider = ({ children }) => {
         const expiry = await getAccessExpiry();
         const now = Math.floor(Date.now() / 1000);
 
+        setAuthLoading(true)
+
         // If the expiration time exists in secure storage (indicating the existence of tokens)
         // and it is about to expire, request a new access token from the backend
         if (expiry && now >= expiry - 30) {
@@ -163,10 +165,11 @@ export const AuthProvider = ({ children }) => {
                 if (refresh) {
                     const res = await api.post('auth/refresh/', { refresh })
                     await saveTokens({ access: res.data.access, refresh })
-                    setIsAuthenticated(true)
 
                     const email = await getEmail()
                     setUserEmail(email)
+
+                    setIsAuthenticated(true)
                     console.log("Refresh token not expired - logging in")
                 }
                 else {
@@ -215,6 +218,8 @@ export const AuthProvider = ({ children }) => {
         else {
             console.log("Refresh token expired - logging out")
         }
+
+        setAuthLoading(false)
     }
 
 

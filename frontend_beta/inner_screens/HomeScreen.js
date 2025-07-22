@@ -17,10 +17,7 @@ import { ContentContext } from '../context/ContentContext'
 
 export default function HomeScreen() {
   const { logout } = useContext(AuthContext)
-  const { retrieveFreeLessons, getFreeTasksByLesson, completeFreeTask, syncCompletedTasks, freeLessonLoadInit } = useContext(ContentContext)
-  
-  // Import the ability to make navigation commands
-  const navigation = useNavigation()
+  const { freeLessonLoadInit } = useContext(ContentContext)
 
   // Controls the state of the drawer
   const [open, setOpen] = useState(false);
@@ -46,32 +43,34 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaProvider>
-    <LinearGradient
-      colors={["#2A1AD8", "#7231EC"]}
-      style={styles.background}
-    >
-    <Drawer
-      open={open}
-      onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
-      renderDrawerContent={renderDrawerContent}
-      drawerStyle={{
-        width: Dimensions.get("window").width * 0.4
-      }}
+      <LinearGradient
+        colors={["#2A1AD8", "#7231EC"]}
+        style={styles.background}
       >
+        <Drawer
+          open={open}
+          onOpen={() => setOpen(true)}
+          onClose={() => setOpen(false)}
+          renderDrawerContent={renderDrawerContent}
+          drawerStyle={{
+            width: Dimensions.get("window").width * 0.4
+          }}
+          >
+            <SafeAreaView style={styles.container}>
 
-        <SafeAreaView style={styles.container}>
+              <TouchableOpacity
+                onPress={() => setOpen((prevOpen) => !prevOpen)}
+                style={styles.iconButton}
+                >
+                  <Ionicons style={{ color: '#FBFAF5' }} name='person-circle-outline' size={45}/>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => setOpen((prevOpen) => !prevOpen)}
-            style={styles.iconButton}
-            >
-              <Ionicons style={{ color: '#FBFAF5' }} name='person-circle-outline' size={45}/>
-          </TouchableOpacity>
+              
 
-        </SafeAreaView>
-    </Drawer>
-    </LinearGradient>
+            </SafeAreaView>
+        </Drawer>
+
+      </LinearGradient>
     </SafeAreaProvider>
   );
 }
@@ -79,7 +78,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
       flex: 1,
-      // justifyContent: 'center'
     },
     background: {
         flex: 1,
@@ -96,7 +94,6 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
       alignItems: 'center',
       marginTop: Constants.statusBarHeight,
-      // backgroundColor: 'red',
 
       shadowColor: '#000', // Shadow color
       shadowOffset: { width: 0, height: 3 }, // Shadow offset (x, y)

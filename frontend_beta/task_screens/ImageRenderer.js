@@ -1,12 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View, Dimensions, Image } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export default function ImageRenderer({ imageObject, useStyle }) {
     // global state variables for UX
     const [isEnlarged, setIsEnlarged] = useState(false);
+    const [imageHeight, setImageHeight] = useState(0)
+    const [imageWidth, setImageWidth] = useState(0)
+
+    const ImageRefactor = Dimensions.get('screen').width * 0.9
 
     const tabBarHeight = useBottomTabBarHeight()
+
+    useEffect(() => {
+        Image.getSize(
+            imageObject,
+            (width, height) => {
+                setImageHeight(height)
+                setImageWidth(width)
+            },
+            (error) => {
+                console.log("Failed to get image size", error)
+            }
+        )
+    }, [])
 
     return (
         <View style={useStyle ? { flex: 1, marginBottom: tabBarHeight + 50, justifyContent:'center'} : {}}>
@@ -19,8 +36,8 @@ export default function ImageRenderer({ imageObject, useStyle }) {
                 style={[
                     styles.image,
                     {
-                        height: isEnlarged ? Dimensions.get('window').height * 0.6 : Dimensions.get('window').height * 0.4,
-                        width: isEnlarged ? Dimensions.get('window').width : Dimensions.get('window').width * 0.85
+                        height: (imageHeight) * (ImageRefactor / imageWidth),
+                        width: (imageWidth) * (ImageRefactor / imageWidth)
                     }
                 ]}
             />
@@ -43,10 +60,6 @@ styles = StyleSheet.create({
     shadowRadius: 3.84, // Shadow blur radius
   },
   image: {
-    
-    height: Dimensions.get('window').height * 0.4,
-    width: Dimensions.get('window').width * 0.85,
-
     paddingHorizontal: 10,
     paddingVertical: 16,
   }

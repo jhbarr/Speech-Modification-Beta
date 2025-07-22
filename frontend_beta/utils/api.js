@@ -6,7 +6,8 @@ import axios from "axios";
 import { getAccessToken } from "../storage/auth";
 
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000'
+    // baseURL: 'http://127.0.0.1:8000'
+    baseURL: 'http://10.200.34.124:8000'
 })
 
 // This interceptor injects the access token with every api request to the backend 

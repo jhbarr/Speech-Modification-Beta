@@ -30,31 +30,31 @@ export default function LoginScreen() {
         <View style={{ flex: 0.5 }}></View>
 
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.inputContainer}>
-          <Icon name='mail-outline' size={25} style={styles.icon}/>
-          <TextInput 
-            style={styles.input}
-            placeholder="Email"
-            keyboardType="email-address"
-            onChangeText={setEmail}
-            autoCapitalize='none'
-            value={email}
-          />
-        </View>
+          <View style={styles.inputContainer}>
+            <Icon name='mail-outline' size={25} style={styles.icon}/>
+            <TextInput 
+              style={styles.input}
+              placeholder="Email"
+              keyboardType="email-address"
+              onChangeText={setEmail}
+              autoCapitalize='none'
+              value={email}
+            />
+          </View>
         </TouchableWithoutFeedback>
 
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.inputContainer}>
-          <Icon name='lock-closed-outline' size={25} style={styles.icon}/>
-          <TextInput 
-            style={styles.input}
-            placeholder="Password"
-            secureTextEntry
-            onChangeText={setPassword}
-            autoCapitalize='none'
-            value={password}
-          />
-        </View>
+          <View style={styles.inputContainer}>
+            <Icon name='lock-closed-outline' size={25} style={styles.icon}/>
+            <TextInput 
+              style={styles.input}
+              placeholder="Password"
+              secureTextEntry
+              onChangeText={setPassword}
+              autoCapitalize='none'
+              value={password}
+            />
+          </View>
         </TouchableWithoutFeedback>
 
         <TouchableOpacity
